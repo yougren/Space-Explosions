@@ -2,6 +2,7 @@ package com.ugen.piano;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 
 /**
  * Created by WilsonCS30 on 3/21/2017.
@@ -47,6 +48,18 @@ public class GameScreen extends ScreenAdapter{
     @Override
     public void resume(){
         Gdx.input.setInputProcessor(handler);
+    }
+
+    public WorldRenderer getRenderer(){
+        return renderer;
+    }
+
+    public GameWorld getWorld(){
+        return world;
+    }
+
+    public OrthographicCamera getCam(){
+        return renderer.getCam();
     }
 
 

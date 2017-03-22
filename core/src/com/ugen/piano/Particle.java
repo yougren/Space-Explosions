@@ -37,6 +37,14 @@ public class Particle {
         color = new Color(0, 0, 1.0f, 1.0f);
     }
 
+    public void setVelocity(Vector2 v){
+        this.vel = v;
+    }
+
+    public void setAcceleration(Vector2 a){
+        this.accel = a;
+    }
+
     public void run(ShapeRenderer renderer){
         update();
         draw(renderer);

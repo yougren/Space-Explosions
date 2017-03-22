@@ -31,6 +31,7 @@ public class WorldRenderer {
     private OrthographicCamera cam;
     private Viewport viewport;
     private GameWorld world;
+    private Dude dude;
 
     public WorldRenderer(GameWorld world){
         this.world = world;
@@ -47,6 +48,8 @@ public class WorldRenderer {
 
         width = cam.viewportWidth;
         height = cam.viewportHeight;
+
+        dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f));
     }
 
     public void render(float delta){
@@ -56,12 +59,19 @@ public class WorldRenderer {
         renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setProjectionMatrix(cam.combined);
 
-        if((System.currentTimeMillis() - initTime) > 3000) {
+        renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f);
+
+        //dude.draw(renderer);
+
+        if(dude.hasShot())
+             dude.update(renderer);
+
+       /* if((System.currentTimeMillis() - initTime) > 3000) {
             initTime = System.currentTimeMillis();
             particles.clear();
             explosion(new Vector2(width / 2, height / 2), particles, 500);
 
-        }
+        }*/
 
         for(int i = particles.size() - 1; i > -1; i--){
             if(particles.get(i).isDead())
@@ -75,6 +85,9 @@ public class WorldRenderer {
     }
 
     public void explosion(Vector2 origin, ArrayList<Particle> particles, int density){
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
+        renderer.setProjectionMatrix(cam.combined);
+
         for(int i = 0; i < density; i++){
             particles.add(new Particle(new Vector2(origin.x, origin.y)));
         }
@@ -82,5 +95,27 @@ public class WorldRenderer {
         for(Particle p : particles){
             p.draw(renderer);
         }
+
+        renderer.end();
+    }
+
+    public OrthographicCamera getCam(){
+        return cam;
+    }
+
+    public ArrayList<Particle> getParticles(){
+        return particles;
+    }
+
+    public float getWidth(){
+        return width;
+    }
+
+    public float getHeight(){
+        return height;
+    }
+
+    public Dude getDude(){
+        return dude;
     }
 }

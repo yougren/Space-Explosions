@@ -7,6 +7,7 @@ package com.ugen.piano;
 public class GameWorld {
     final PianoThing game;
     WorldRenderer renderer;
+    private Dude dude;
 
     public GameWorld(PianoThing game){
         this.game = game;

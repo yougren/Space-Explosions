@@ -1,6 +1,8 @@
 package com.ugen.piano;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.math.Vector2;
 
 /**
  * Created by WilsonCS30 on 3/21/2017.
@@ -35,7 +37,12 @@ public class InputHandler implements InputProcessor {
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+        float trueX = screen.getCam().viewportWidth * screenX / Gdx.graphics.getWidth();
+        float trueY = screen.getCam().viewportHeight - screen.getCam().viewportHeight * screenY / Gdx.graphics.getHeight();
+        Dude dude = screen.getRenderer().getDude();
+        //screen.getRenderer().explosion(new Vector2(trueX, trueY), screen.getRenderer().getParticles(), 250);
 
+        dude.shoot((float) Math.atan((trueY - dude.getPosition().y) / (trueX - dude.getPosition().x)));
 
         return false;
     }
