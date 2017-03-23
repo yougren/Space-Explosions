@@ -1,6 +1,7 @@
 package com.ugen.piano;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -32,6 +33,8 @@ public class WorldRenderer {
     private Viewport viewport;
     private GameWorld world;
     private Dude dude;
+    private BadGuy badGuy;
+    private Color defaultColor;
 
     public WorldRenderer(GameWorld world){
         this.world = world;
@@ -50,38 +53,48 @@ public class WorldRenderer {
         height = cam.viewportHeight;
 
         dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f));
+        badGuy = new BadGuy(new Vector2(width/2 - 5, height-10));
+
+        defaultColor = new Color(Color.BLUE);
     }
 
     public void render(float delta){
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
+        renderer.begin(ShapeRenderer.ShapeType.Line);
         renderer.setProjectionMatrix(cam.combined);
 
         renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f);
 
-        //dude.draw(renderer);
+        badGuy.draw(renderer);
+        dude.draw(renderer);
 
-        if(dude.hasShot())
-             dude.update(renderer);
 
-       /* if((System.currentTimeMillis() - initTime) > 3000) {
-            initTime = System.currentTimeMillis();
-            particles.clear();
-            explosion(new Vector2(width / 2, height / 2), particles, 500);
+        dude.update(renderer);
 
-        }*/
 
         for(int i = particles.size() - 1; i > -1; i--){
-            if(particles.get(i).isDead())
+            if(particles.get(i).isDead() || particles.get(i).getPosition().y < 0 || particles.get(i).getPosition().y > height || particles.get(i).getPosition().x < 0 || particles.get(i).getPosition().x > width)
                 particles.remove(i);
             else
-                particles.get(i).run(renderer);
+                particles.get(i).run(renderer, defaultColor);
         }
 
+        Gdx.app.log("DEBUG", "PARTICLES: " + particles.size());
 
         renderer.end();
+
+        checkBulletCollisions();
+    }
+
+    public void checkBulletCollisions(){
+
+        for(Particle p : dude.getBullets()){
+            if(p.intersects(badGuy.getHitbox())){
+                explosion(p.getPosition(), particles, 1000);
+            }
+        }
     }
 
     public void explosion(Vector2 origin, ArrayList<Particle> particles, int density){
@@ -93,7 +106,7 @@ public class WorldRenderer {
         }
 
         for(Particle p : particles){
-            p.draw(renderer);
+            p.draw(renderer, defaultColor);
         }
 
         renderer.end();
