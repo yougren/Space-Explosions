@@ -37,7 +37,7 @@ public class InputHandler implements InputProcessor {
         Dude dude = screen.getRenderer().getDude();
         //screen.getRenderer().explosion(new Vector2(trueX, trueY), screen.getRenderer().getParticles(), 2000);
 
-        dude.shoot(new Vector2(trueX, trueY));
+        dude.shoot(new Vector2(screenX, screenY));
 
         return false;
     }

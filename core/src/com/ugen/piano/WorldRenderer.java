@@ -5,9 +5,17 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Touchpad;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -19,41 +27,43 @@ import java.util.Random;
  */
 
 public class WorldRenderer {
-    SpriteBatch batch;
-    ShapeRenderer renderer;
-
-    long initTime, timeElapsed;
-
-    Random rand;
-
-    private ArrayList<Particle> particles;
+    private SpriteBatch batch;
+    private ShapeRenderer renderer;
+    private long initTimeD, initTimeB, initHit;
+    private Random rand;
+    private ParticleSystem ps;
     private ArrayList<BadGuy> badGuys;
-
-    private Particle p;
-    private float width, height, fps;
+    private ParticleSystemPool systemPool;
+    private Array<ParticleSystemPool.PooledSystem> systems;
+    private float width, height;
     private OrthographicCamera cam;
     private Viewport viewport;
     private GameWorld world;
     private Dude dude;
-    private BadGuy badGuy;
-    private Color defaultColor;
-    private FPSLogger logger;
+    private Touchpad touchPadR, touchPadL;
+    private Touchpad.TouchpadStyle touchpadStyle;
+    private Skin touchpadSkin;
+    private Drawable touchpadBack, touchpadFront;
+    private Stage stage;
+    private int score;
+    private BitmapFont font;
+
 
     public WorldRenderer(GameWorld world){
         this.world = world;
 
-        initTime = System.currentTimeMillis();
+        initTimeD = initTimeB = System.currentTimeMillis();
 
         rand = new Random();
 
         badGuys = new ArrayList<BadGuy>();
-        particles = new ArrayList<Particle>();
 
+        batch = new SpriteBatch();
         renderer = new ShapeRenderer();
         renderer.setAutoShapeType(true);
 
         cam = new OrthographicCamera(1.0f, (float) Gdx.graphics.getHeight() / (float)Gdx.graphics.getWidth());
-        viewport = new ExtendViewport(108, 192, cam);
+        viewport = new ExtendViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), cam);
         viewport.apply();
         viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
 
@@ -61,86 +71,131 @@ public class WorldRenderer {
         height = cam.viewportHeight;
 
         dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f));
-      //  badGuy = new BadGuy(new Vector2(width/2 - 5, height-10));
 
-        defaultColor = new Color(Color.BLUE);
+        ps = new ParticleSystem(new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2),
+                new Vector2(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), 100);
 
-        logger = new FPSLogger();
+        systemPool = new ParticleSystemPool(ps, 10, 100);
+        systems = new Array<ParticleSystemPool.PooledSystem>();
+
+        touchpadSkin = new Skin();
+        touchpadSkin.add("touchBackground", AssetManager.getJoystickBackground());
+        touchpadSkin.add("touchForeground", AssetManager.getJoystickForeground());
+
+        touchpadStyle = new Touchpad.TouchpadStyle();
+
+        touchpadBack = touchpadSkin.getDrawable("touchBackground");
+        touchpadFront = touchpadSkin.getDrawable("touchForeground");
+
+        touchpadStyle.background = touchpadBack;
+        touchpadStyle.knob = touchpadFront;
+
+        touchPadL = new Touchpad(0, touchpadStyle);
+        touchPadL.setBounds(100, height / 2 - 100, 200, 200);
+
+        touchPadR = new Touchpad(0, touchpadStyle);
+        touchPadR.setBounds(width - 300, height / 2 - 100, 200, 200);
+
+        stage = new Stage(viewport, batch);
+        stage.addActor(touchPadL);
+        stage.addActor(touchPadR);
+        Gdx.input.setInputProcessor(stage);
+
+        initHit = 0;
+        score = 0;
+
+        font = new BitmapFont();
     }
 
     public void render(float delta){
-        logger.log();
-
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        renderer.begin(ShapeRenderer.ShapeType.Line);
+        batch.begin();
+        batch.setColor(new Color(0, 0, 1, 1));
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setProjectionMatrix(cam.combined);
 
-        if(System.currentTimeMillis() - initTime > 1000){
-            badGuys.add(new BadGuy(new Vector2(rand.nextInt((int)width), rand.nextInt((int)height))));
-            initTime = System.currentTimeMillis();
+        if(System.currentTimeMillis() - initTimeD > 1000){
+            initTimeD = System.currentTimeMillis();
+            badGuys.add(new BadGuy(new Vector2(rand.nextFloat() * width, rand.nextFloat() * height)));
+            Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  "FREE: " + systemPool.getFree() + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax());
+
         }
+        if(System.currentTimeMillis() - initTimeB > 250 && Math.abs(touchPadR.getKnobPercentX() + touchPadR.getKnobPercentY()) > 0){
+            initTimeB = System.currentTimeMillis();
+            dude.shoot(new Vector2(dude.getPosition().x + touchPadR.getKnobPercentX(), dude.getPosition().y + touchPadR.getKnobPercentY()));
+        }
+
+
         renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f);
 
-        //badGuy.draw(renderer);
-        dude.draw(renderer);
-
-
-        dude.update(renderer);
+        dude.setVelocity(new Vector2(touchPadL.getKnobPercentX() * 10, touchPadL.getKnobPercentY() * 10));
+        dude.draw(renderer, batch);
+        drawHealthBar();
 
         for(BadGuy b : badGuys){
             b.update(dude.getPosition());
             b.draw(renderer);
+            if(System.currentTimeMillis() - initHit > dude.getDamageTimer())
+                if(dude.intersects(b.getHitbox())){
+                    Gdx.app.log("DEBUG", "OW");
+                    dude.setHealth(dude.getHealth() - 5);
+                    initHit = System.currentTimeMillis();
+                }
         }
 
-        for(int i = particles.size() - 1; i > -1; i--){
-            if(particles.get(i).isDead() || particles.get(i).getPosition().y < 0 || particles.get(i).getPosition().y > height || particles.get(i).getPosition().x < 0 || particles.get(i).getPosition().x > width)
-                particles.remove(i);
-            else
-                particles.get(i).run(renderer, defaultColor);
+        for(int i = systems.size - 1; i >= 0; i--){
+            ParticleSystemPool.PooledSystem system = systems.get(i);
+            system.draw(batch, delta);
+
+            if(system.isComplete()){
+                system.free();
+                systems.removeIndex(i);
+            }
         }
 
-        //Gdx.app.log("DEBUG", "PARTICLES: " + particles.size());
+        font.setColor(Color.WHITE);
+        font.draw(batch, "SCORE: " + score, width/2, height/2);
+        font.getData().setScale(5.0f);
 
         renderer.end();
+        batch.end();
+
+        stage.act(Gdx.graphics.getDeltaTime());
+        stage.draw();
 
         checkBulletCollisions();
     }
 
-    public void checkBulletCollisions(){
+    public void drawHealthBar(){
+        int rectNum = dude.getHealth() / 10;
 
-        for(Particle p : dude.getBullets()){
+        for(int i = 0; i < rectNum; i++){
+            renderer.rect((4 * i + 1) * width / 123, height - 50, width / 41, width / 41);
+        }
+    }
+
+    public void checkBulletCollisions(){
+        for(int ii = dude.getBullets().size() - 1; ii >= 0; ii--){
+            Particle p = dude.getBullets().get(ii);
             for(int i = badGuys.size() - 1; i > -1; i--){
                 if (p.intersects(badGuys.get(i).getHitbox())) {
-                    explosion(p.getPosition(), particles, 1000);
+                    ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                    temp.setPosition(new Vector2(p.getX(), p.getY()));
+                    systems.add(temp);
+                    dude.getBullets().remove(p);
                     badGuys.remove(i);
+                    score += 420;
+
+                    break;
                 }
             }
         }
     }
 
-    public void explosion(Vector2 origin, ArrayList<Particle> particles, int density){
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setProjectionMatrix(cam.combined);
-
-        for(int i = 0; i < density; i++){
-            particles.add(new Particle(new Vector2(origin.x, origin.y)));
-        }
-
-        for(Particle p : particles){
-            p.draw(renderer, defaultColor);
-        }
-
-        renderer.end();
-    }
-
     public OrthographicCamera getCam(){
         return cam;
-    }
-
-    public ArrayList<Particle> getParticles(){
-        return particles;
     }
 
     public float getWidth(){

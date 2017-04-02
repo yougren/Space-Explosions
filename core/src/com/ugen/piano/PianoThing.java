@@ -18,23 +18,14 @@ import java.util.Random;
 public class PianoThing extends Game {
 	GameScreen gameScreen;
 
-	long initTime;
-
-	ShapeRenderer renderer;
-	Random rand;
-	private ArrayList<Particle> particles;
-
-	private Particle p;
-	private float width, height;
-	private OrthographicCamera cam;
-	private Viewport viewport;
 
 	@Override
 	public void create() {
+		AssetManager.load();
+
 		gameScreen = new GameScreen(this);
 		setScreen(gameScreen);
-		initTime = System.currentTimeMillis();
-		rand = new Random();
+
 
 	}
 
@@ -48,5 +39,6 @@ public class PianoThing extends Game {
 	@Override
 	public void dispose () {
 		super.dispose();
+		AssetManager.dispose();
 	}
 }

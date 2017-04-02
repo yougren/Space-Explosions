@@ -42,7 +42,7 @@ public class GameScreen extends ScreenAdapter{
         world.setRenderer(renderer);
         handler = new InputHandler(this);
 
-        Gdx.input.setInputProcessor(handler);
+        //Gdx.input.setInputProcessor(handler);
     }
 
     @Override

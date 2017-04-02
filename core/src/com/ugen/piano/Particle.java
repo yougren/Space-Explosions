@@ -2,6 +2,7 @@ package com.ugen.piano;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -12,37 +13,51 @@ import java.util.Random;
  * Created by WilsonCS30 on 3/10/2017.
  */
 
-public class Particle {
+public class Particle extends Sprite {
 
-    private float decayRate = 2.0f;
-    private float lifetime, v, theta;
-    private int radius;
-    private Vector2 pos, vel, accel;
-    private Color defaultColor;
-    Random rand;
+    private float lifetime, currentLife, v, theta;
+
+    private Vector2 vel, accel;
+
+    private Random rand;
 
     public Particle(){
-        defaultColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-        pos = new Vector2(0.0f, 0.0f);
-        vel = new Vector2(0.0f ,0.0f);
-        accel = new Vector2(0.0f, 0.0f);
+        super();
     }
 
-    public Particle(Vector2 position){
+    public Particle(Sprite sprite){
+        super(sprite);
+        initialize();
+    }
+
+    public void initialize(){
         rand = new Random();
 
-        theta = rand.nextFloat() * 2 * (float)Math.PI;
+        this.theta = rand.nextFloat() * 2 * (float)Math.PI;
         v = 5 * (rand.nextFloat() + .1f);
 
-        this.vel = new Vector2();
+        vel = new Vector2();
         vel.x = (float)(v * Math.cos(theta));
         vel.y = (float)(v * Math.sin(theta));
 
-        this.accel = new Vector2(-vel.x / 500, -vel.y / 500);
-        this.pos = position;
-        lifetime = 255;
-        radius = 2;
-        defaultColor = new Color(0, 0, 1.0f, 1.0f);
+        rotate(theta * 180 / (float)Math.PI);
+
+        accel = new Vector2(-vel.x / 500, -vel.y / 500);
+        lifetime = currentLife = 2000;
+    }
+
+    public void reset(){
+        rotate(-theta * 180 / (float)Math.PI);
+        this.theta = rand.nextFloat() * 2 * (float)Math.PI;
+        v = 15 * (rand.nextFloat() + .1f) + 5;
+
+        vel.x = (float)(v * Math.cos(theta));
+        vel.y = (float)(v * Math.sin(theta));
+
+        rotate(theta * 180 / (float)Math.PI);
+
+        accel = new Vector2(-vel.x / 250, -vel.y / 250);
+        lifetime = currentLife = 2000;
     }
 
     public void setVelocity(Vector2 v){
@@ -53,36 +68,21 @@ public class Particle {
         this.accel = a;
     }
 
-    public void run(ShapeRenderer renderer, Color color){
-        update();
-        draw(renderer, color);
-    }
-
     public void update(){
-        lifetime -= decayRate;
         vel.add(accel);
-        pos.add(vel);
-
-        defaultColor.a -= decayRate/255.0f;
-
-       // Gdx.app.log("DEBUG", color.a + "");
+        translate(vel.x, vel.y);
     }
 
-    public void draw(ShapeRenderer renderer, Color color){
-        //renderer.begin(ShapeRenderer.ShapeType.Line);
+    public void update(float delta){
+        currentLife -= 10;
 
-        renderer.setColor(color);
-        //renderer.circle(pos.x, pos.y, radius);
-        renderer.rect(pos.x, pos.y, 0.25f, 2.0f, 0.5f, 4.0f, 1.0f, 1.0f,  (float)(Math.atan(vel.y / vel.x) * 180 / Math.PI) + 90.0f);
-        //renderer.end();
-    }
-
-    public Vector2 getPosition(){
-        return pos;
+        vel.add(accel);
+        translate(vel.x * delta * 60, vel.y * delta * 60);
+        setAlpha(currentLife / lifetime);
     }
 
     public boolean intersects(Rectangle rect){
-        return rect.contains(pos);
+        return rect.contains(getX(), getY());
     }
 
     public Boolean isDead(){

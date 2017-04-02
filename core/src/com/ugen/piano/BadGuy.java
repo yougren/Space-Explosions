@@ -18,14 +18,14 @@ public class BadGuy {
         this.velocity = new Vector2();
         this.acceleration = new Vector2();
         this.position = pos;
-        size = new Vector2(10, 10);
+        size = new Vector2(100, 100);
         hitbox = new Rectangle(position.x, position.y, size.x, size.y);
     }
 
     public void update(Vector2 newTarget){
         double mag = Math.sqrt((newTarget.x - position.x)*(newTarget.x - position.x) + (newTarget.y - position.y)*(newTarget.y - position.y));
-        velocity.x = (float)((newTarget.x - position.x) / mag) / 3;
-        velocity.y = (float)((newTarget.y - position.y) / mag) / 3;
+        velocity.x = 5 * (float)((newTarget.x - position.x) / mag);
+        velocity.y = 5 * (float)((newTarget.y - position.y) / mag);
 
         //velocity.add(acceleration);
         hitbox.setPosition(position);
@@ -33,7 +33,7 @@ public class BadGuy {
     }
 
     public void draw(ShapeRenderer renderer){
-        renderer.setColor(new Color(1.0f, 1.0f, 0.0f, 1.0f));
+        renderer.setColor(new Color(1.0f, 0.0f, .3f, 1.0f));
         renderer.rect(position.x, position.y, size.x, size.y);
     }
 
