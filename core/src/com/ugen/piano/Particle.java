@@ -34,7 +34,7 @@ public class Particle extends Sprite {
         rand = new Random();
 
         this.theta = rand.nextFloat() * 2 * (float)Math.PI;
-        v = 5 * (rand.nextFloat() + .1f);
+        v = 30 * (rand.nextFloat() + .1f) + 5;
 
         vel = new Vector2();
         vel.x = (float)(v * Math.cos(theta));
@@ -42,22 +42,22 @@ public class Particle extends Sprite {
 
         rotate(theta * 180 / (float)Math.PI);
 
-        accel = new Vector2(-vel.x / 500, -vel.y / 500);
-        lifetime = currentLife = 2000;
+        accel = new Vector2(-vel.x / 200, -vel.y / 200);
+        lifetime = currentLife = 1000;
     }
 
     public void reset(){
         rotate(-theta * 180 / (float)Math.PI);
         this.theta = rand.nextFloat() * 2 * (float)Math.PI;
-        v = 15 * (rand.nextFloat() + .1f) + 5;
+        v = 30 * (rand.nextFloat() + .1f) + 5;
 
         vel.x = (float)(v * Math.cos(theta));
         vel.y = (float)(v * Math.sin(theta));
 
         rotate(theta * 180 / (float)Math.PI);
 
-        accel = new Vector2(-vel.x / 250, -vel.y / 250);
-        lifetime = currentLife = 2000;
+        accel = new Vector2(-vel.x / 200, -vel.y / 200);
+        lifetime = currentLife = 1000;
     }
 
     public void setVelocity(Vector2 v){
@@ -74,7 +74,7 @@ public class Particle extends Sprite {
     }
 
     public void update(float delta){
-        currentLife -= 10;
+        currentLife -= delta * 1000;
 
         vel.add(accel);
         translate(vel.x * delta * 60, vel.y * delta * 60);
@@ -86,7 +86,7 @@ public class Particle extends Sprite {
     }
 
     public Boolean isDead(){
-        return lifetime < 0.0f;
+        return currentLife < 0.0f;
     }
 
 }

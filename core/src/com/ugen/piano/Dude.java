@@ -29,6 +29,7 @@ public class Dude {
         damageTimer = 250;
         health = 300;
         bullet = new Sprite(new Texture("particle.png"));
+        bullet.setColor(new Color(1, 1, 1, 1));
         this.position = position;
         this.velocity = new Vector2(0, 0);
         this.scale = scale;
@@ -45,6 +46,7 @@ public class Dude {
 
         renderer.setColor(color);
         renderer.circle(position.x, position.y ,50.0f);
+
 
         for(Particle p : bullets){
             p.update();

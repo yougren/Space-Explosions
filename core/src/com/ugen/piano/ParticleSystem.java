@@ -22,6 +22,7 @@ public class ParticleSystem {
     private boolean[] active;
     private Color color;
     private Random rand;
+    private float randR, randG, randB;
 
     public ParticleSystem(ParticleSystem ps){
         initialize(ps.getPosition(), ps.getBoundary(), ps.getMaxParticles());
@@ -34,8 +35,12 @@ public class ParticleSystem {
     public void initialize(Vector2 position, Vector2 boundary, int maxParticles){
         rand = new Random();
 
+        randR = rand.nextFloat();
+        randG = rand.nextFloat();
+        randB = rand.nextFloat();
+
         sprite = new Sprite(new Texture("particle.png"), 4, 1);
-        sprite.setColor(new Color(.25f, .41f, .88f, 1.0f));
+        sprite.setColor(new Color(randR, randG, randB, rand.nextFloat()));
 
         this.position = position;
         this.boundary = boundary;
@@ -43,7 +48,7 @@ public class ParticleSystem {
         this.particles = new ArrayList<Particle>();
         this.active = new boolean[maxParticles];
         this.activeParticles = 0;
-        this.duration = 2000;
+        this.duration = 1000;
 
         for(int i = 0; i < maxParticles; i++) {
             this.particles.add(new Particle(sprite));
@@ -55,7 +60,7 @@ public class ParticleSystem {
     }
 
     public void draw(SpriteBatch batch,  float delta){
-        duration -= 10;
+        duration -= delta * 1000;
 
         for(int i = 0; i < active.length; i++){
             if(active[i]){
@@ -84,14 +89,19 @@ public class ParticleSystem {
 
     public void reset(){
         //color = new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
-        color = (new Color(.25f, .41f, .88f, 1.0f));
+        randR = rand.nextFloat();
+        randG = rand.nextFloat();
+        randB = rand.nextFloat();
+
+        color = new Color(randR, randG, randB, rand.nextFloat());
+
         for(int i = 0; i < maxParticles; i++){
             this.particles.get(i).reset();
             this.particles.get(i).setColor(color);
             active[i] = true;
         }
 
-        this.duration = 2000;
+        this.duration = 1000;
         this.activeParticles = maxParticles;
     }
 
@@ -113,5 +123,13 @@ public class ParticleSystem {
 
     public int getMaxParticles() {
         return maxParticles;
+    }
+
+    public ArrayList<Particle> getParticles(){
+        return particles;
+    }
+
+    public int getActiveParticles(){
+        return activeParticles;
     }
 }

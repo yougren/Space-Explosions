@@ -45,7 +45,7 @@ public class WorldRenderer {
     private Skin touchpadSkin;
     private Drawable touchpadBack, touchpadFront;
     private Stage stage;
-    private int score;
+    private int score, totalParicles;
     private BitmapFont font;
 
 
@@ -73,7 +73,7 @@ public class WorldRenderer {
         dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f));
 
         ps = new ParticleSystem(new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2),
-                new Vector2(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), 100);
+                new Vector2(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), 200);
 
         systemPool = new ParticleSystemPool(ps, 10, 100);
         systems = new Array<ParticleSystemPool.PooledSystem>();
@@ -116,17 +116,20 @@ public class WorldRenderer {
         renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setProjectionMatrix(cam.combined);
 
+
         if(System.currentTimeMillis() - initTimeD > 1000){
             initTimeD = System.currentTimeMillis();
             badGuys.add(new BadGuy(new Vector2(rand.nextFloat() * width, rand.nextFloat() * height)));
-            Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  "FREE: " + systemPool.getFree() + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax());
+            Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  "FREE: " + systemPool.getFree() + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax() + " , TOTAL PARTICLES: " + totalParicles);
 
         }
         if(System.currentTimeMillis() - initTimeB > 250 && Math.abs(touchPadR.getKnobPercentX() + touchPadR.getKnobPercentY()) > 0){
             initTimeB = System.currentTimeMillis();
             dude.shoot(new Vector2(dude.getPosition().x + touchPadR.getKnobPercentX(), dude.getPosition().y + touchPadR.getKnobPercentY()));
         }
+        Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  "FREE: " + systemPool.getFree() + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax() + " , TOTAL PARTICLES: " + totalParicles);
 
+        totalParicles = 0;
 
         renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f);
 
@@ -148,6 +151,8 @@ public class WorldRenderer {
         for(int i = systems.size - 1; i >= 0; i--){
             ParticleSystemPool.PooledSystem system = systems.get(i);
             system.draw(batch, delta);
+
+            totalParicles += system.getActiveParticles();
 
             if(system.isComplete()){
                 system.free();
