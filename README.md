@@ -4,7 +4,7 @@ The first thing we need to do is understand what a particle system really is. It
 How do we even start making something so general? Well, a good first step would be to make a particle class and think about what types of functions and private variables it should have. Here is a fairly basic setup for our initial particle class: 
 
 
-![Alt text](https://github.com/Jewgene/Space-Explosions/tree/master/tut1.png)
+![Alt text](tut1.png)
 
 
 This is all fairly self-explanatory. We want our particle to have a position, velocity, and probably an acceleration to make it more dynamic. Whenever we decide to update this particle, we change its velocity by the acceleration, and the position by the velocity. None of this really does us much good if we can't even display this particle on the screen, so let's do that. 
