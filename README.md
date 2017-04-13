@@ -39,12 +39,13 @@ If we look at our method of stopping the particles from drawing, there is a subt
 
 Note that I iterate through the particles backwards now. The reason for this is that when an element is removed from an array, every element ahead of that removed one is pushed back to fill the gap. That means that when the index increments by 1, we are going to skip the particle that replaced the removed one. Here is a simple illustration of what happens: 
 
-***Index:*** 0  1  **2**  3  4
+***  Index:*** 0  1  **2**  3  4       
 ***Element:*** a  b  c  d  e
 
 Suppose we remove element c.
 
 ***  Index:*** 0  1  2  **3**
+
 ***Element:*** a  b  d  e
 
 As you can see, we never actually updated element d, because although our index increased, the position of all the elements in our array changed. So instead of checking element d, it checks the spot where element d **WAS** before the removal of element c. That is a relatively simple change, but it is important to note. 
