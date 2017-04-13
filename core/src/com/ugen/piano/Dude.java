@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -24,8 +25,10 @@ public class Dude {
     boolean shot = false;
     private Color color;
     private int health, damageTimer;
+    private Circle hitbox;
+    private float width, height;
 
-    public Dude(Vector2 position, Vector2 scale){
+    public Dude(Vector2 position, Vector2 scale, float width, float height){
         damageTimer = 250;
         health = 300;
         bullet = new Sprite(new Texture("particle.png"));
@@ -34,10 +37,14 @@ public class Dude {
         this.scale = scale;
         bullets = new ArrayList<Particle>();
         color = new Color(0.1f, 0.3f, 0.8f, 1.0f);
+        hitbox = new Circle(position, 50.0f);
+        this.width = width;
+        this.height = height;
     }
 
     public void update(){
         position.add(velocity);
+        hitbox.setPosition(position);
     }
 
     public void draw(ShapeRenderer renderer, SpriteBatch batch){
@@ -46,9 +53,13 @@ public class Dude {
         renderer.setColor(color);
         renderer.circle(position.x, position.y ,50.0f);
 
-        for(Particle p : bullets){
+        for(int i = bullets.size() - 1; i >=0; i--){
+            Particle p = bullets.get(i);
             p.update();
             p.draw(batch);
+            if(p.getX() < 0 || p.getX() > width || p.getY() < 0 || p.getY() > height) {
+                bullets.remove(p);
+            }
         }
     }
 
@@ -107,6 +118,8 @@ public class Dude {
     }
 
     public boolean intersects(Rectangle rect){
-        return rect.getPosition(new Vector2(0, 0)).add(-position.x, -position.y).len() < 50.0f;
+        return rect.contains(position.x, position.y) || hitbox.contains(rect.getX(), rect.getY()) ||
+        hitbox.contains(rect.getX() + rect.getWidth(), rect.getY()) || hitbox.contains(rect.getX(), rect.getY() + rect.getHeight())
+        || hitbox.contains(rect.getX() + rect.getWidth(), rect.getY() + rect.getHeight());
     }
 }

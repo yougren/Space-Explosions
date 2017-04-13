@@ -21,10 +21,6 @@ public class Particle extends Sprite {
 
     private Random rand;
 
-    public Particle(){
-        super();
-    }
-
     public Particle(Sprite sprite){
         super(sprite);
         initialize();

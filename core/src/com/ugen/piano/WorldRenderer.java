@@ -70,7 +70,7 @@ public class WorldRenderer {
         width = cam.viewportWidth;
         height = cam.viewportHeight;
 
-        dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f));
+        dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f), width, height);
 
         ps = new ParticleSystem(new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2),
                 new Vector2(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), 100);
