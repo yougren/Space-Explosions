@@ -75,7 +75,7 @@ Here are a couple screenshots of what it looks like on an emulator (the two larg
 ![alt-text](tut11.png)
 
 
-
+With the way I defined the particle motion, the system has sort of a rain shower effect. However, this behavior is very easy to manipulate simply by changing how you define the velocity and acceleration of the particles. Note that this is nowhere near and optimized particle system, it is simply a functional one, so don't expect to run 30,000 particles at 60fps with this thing. For most intensive purposes however, this should be sufficient. 
 
 
 
