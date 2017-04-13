@@ -60,13 +60,20 @@ I've changed the **Particle** class constructor to call a different function to 
 
 ![alt-text](tut9.png)
 
-The only really noteworthy things in this code is that I've set the position of the particle system to the center of the screen, and I add a particle to the system every 20 milliseconds (since android measures time in milliseconds.)
+The only really noteworthy things in this code is that I've set the position of the particle system to the center of the screen and given it a cap of 250 particles, and I add a particle to the system every 20 milliseconds (since android measures time in milliseconds.)
+All the drawing happens in the lower **render(float delta)** function.
 
 Up to this point, the majority of all the code i've written is easily transferrable to any other language. That being said, if you've been following along line-for-line in java and libgdx, there are a few things I need to clear up. None of the logic really changes, but the way we need to write some of that logic out is a bit different. Here are the final **ParticleSystem** and **Particle** classes:
 
 
 ![alt-text](tut7.png)
 ![alt-text](tut8.png)
+
+Here are a couple screenshots of what it looks like on an emulator (the two large circles are just artifacts that appear when screenshotting.)
+
+![alt-text](tut10.png)
+![alt-text](tut11.png)
+
 
 
 
