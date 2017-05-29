@@ -39,28 +39,31 @@ If we look at our method of stopping the particles from drawing, there is a subt
 
 Note that I iterate through the particles backwards now. The reason for this is that when an element is removed from an array, every element ahead of that removed one is pushed back to fill the gap. That means that when the index increments by 1, we are going to skip the particle that replaced the removed one. Here is a simple illustration of what happens: 
 
-***Index:*** 0  1  **2**  3  4
-
+  ***Index:*** 0  1  ***2***  3  4       
 ***Element:*** a  b  c  d  e
 
 Suppose we remove element c.
 
-***Index:*** 0  1  2  **3**
+  ***Index:*** 0  1  2  ***3***
 
 ***Element:*** a  b  d  e
 
-As you can see, we never actually updated element d, because although our index increased, the position of all the elements in our array changed. That is a relatively simple change, but it is important to note. 
+The bolded and italicized index represents what index of the array we are checking. As you can see, we never actually updated element d, because although our index increased, the position of all the elements in our array changed. So instead of checking element d, it checks the spot where element d **WAS** before the removal of element c. That is a relatively simple change, but it is important to note. 
+
 The main change in this new code snippet is that whenever a particle is dead, we move it from the array and then add a new particle to it to make sure that the number of particles on the screen is constant. While this seems like that natural thing to do, it is somewhat inefficient. Why delete and create a particle when we can just reset it to its initial state? Although this doesn't really follow what we see visually, it makes more sense.
 
 
 ![alt-text](tut6.png)
 
 
-I've changed the **Particle** class constructor to call a different function to initialize it so that I can reinitialize it after it dies. I also added some actualy numbers for its position, velocity, and acceleration. At the moment, the position of the particle is an argument of the contructor, the velocity is some random vector whose x and y components are less than or equal to 5, and the acceleration is just a constant negative y value to simulate gravity. We can actually draw this to the screen now and see what kind of effect it will give us. Although the following snippet is very android-specific, I'm showing just in case it's not immediately obvious how we would draw the particle system. 
+I've changed the **Particle** class constructor to call a different function to initialize it so that I can reinitialize it after it dies. I also added some actualy numbers for its position, velocity, and acceleration. At the moment, the position of the particle is an argument of the contructor, the velocity is some random vector whose x and y components are less than or equal to 5, and the acceleration is just a constant negative y value to simulate gravity. All of these variables can and should be changed to fit the users wants and needs. I arbitrarily picked this behavior as it was relatively simple. If you wanted to, you could even make the particles spiral around a certain point by having the velocity vector constantly change direction based on an **angular acceleration** and have a changing radius. If you wanted to get really complicated, you can add some masses to the screen which create gravity wells to which the particles will be attracted. These are just a few of the behaviors you can implement after the particle system properly renders and updates all the particles.
+
+Anyway, those were just some ideas of the old dome. We can actually draw this to the screen now and see what kind of effect it will give us. Although the following snippet is very android-specific, I'm showing just in case it's not immediately obvious how we would draw the particle system. 
 
 ![alt-text](tut9.png)
 
-The only really noteworthy things in this code is that I've set the position of the particle system to the center of the screen, and I add a particle to the system every 20 milliseconds (since android measures time in milliseconds.)
+The only really noteworthy things in this code is that I've set the position of the particle system to the center of the screen and given it a cap of 250 particles, and I add a particle to the system every 20 milliseconds (since android measures time in milliseconds.)
+All the drawing happens in the lower **render(float delta)** function.
 
 Up to this point, the majority of all the code i've written is easily transferrable to any other language. That being said, if you've been following along line-for-line in java and libgdx, there are a few things I need to clear up. None of the logic really changes, but the way we need to write some of that logic out is a bit different. Here are the final **ParticleSystem** and **Particle** classes:
 
@@ -68,7 +71,13 @@ Up to this point, the majority of all the code i've written is easily transferra
 ![alt-text](tut7.png)
 ![alt-text](tut8.png)
 
+Here are a couple screenshots of what it looks like on an emulator (the two large circles are just artifacts that appear when screenshotting.)
 
+![alt-text](tut10.png)
+![alt-text](tut11.png)
+
+
+With the way I defined the particle motion, the system has sort of a rain shower effect. However, this behavior is very easy to manipulate simply by changing how you define the velocity and acceleration of the particles. Note that this is nowhere near and optimized particle system, it is simply a functional one, so don't expect to run 30,000 particles at 60fps with this thing. For most intensive purposes however, this should be sufficient. 
 
 
 
