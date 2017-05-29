@@ -53,14 +53,9 @@ public class Dude {
 
         renderer.setColor(color);
         renderer.circle(position.x, position.y ,50.0f);
-
-<<<<<<< HEAD
-        for(int i = bullets.size() - 1; i >=0; i--){
-            Particle p = bullets.get(i);
-=======
+        
 
         for(Particle p : bullets){
->>>>>>> 250f791876684111fe48c7362f1cf6f5d8f1c019
             p.update();
             p.draw(batch);
             if(p.getX() < 0 || p.getX() > width || p.getY() < 0 || p.getY() > height) {
