@@ -1,3 +1,57 @@
+**How to Optimize our Simple Particle System**
+
+In the previous tutorial, I went over how to make a relatively simple particle system which had a sort of "rain shower" effect. In this tutorial, I will explain how one can go about improving this particle system by increasing its performance. 
+
+There are a few ways we can increase the performance of our particle system. We can decrease the function calls, decrease object construction/deconstruction, we can make more efficient calculations, or we can multithread the program. These four methods of optimizing a particle system are fairly complicated, so I will just go over one of them: decreasing object creation. 
+
+In our previous particle system, we managed to optimize it slightly by simply "resetting" the particles instead of creating new ones. However, what if we have multiple particle systems to deal with? Say you have a game that involves a lot of explosions. If you have to create a new particle system with thousands of new particles every single time something blows up, the game is not going to run very efficiently. I'm going to introduce a core concept called **pooling**. Essentially **pooling** is a way of reusing certain objects by putting them in an array and just pulling from it whenever you need one. This is basically what we did within our previous particle system. Instead of creating new particles every loop, we simply reused ones that were "dead". We now want to do this same thing, but with the particle system itself.
+
+![Alt text](tut21.png)
+
+The code above shows two new classes I created called **ParticleSystemPool** and **PooledSystem**. The **PooledSystem** class is essentially the same as our **ParticleSystem** class except it can be pooled through the **ParticleSystemPool** class. It's a lot to take in at first, so i'll go through function by function and explain what's going on.
+
+**public ParticleSystemPool(ParticleSystem ps, int initialCapacity, int max){}**
+
+This is the contructor for the **ParticleSystemPool**. In it, we initialize an array of **PooledSystems** of size **initialCapacity** as well as assign a value for the maximum number of **PooledSystems** we can have, and we create a base particle system to clone our **PooledSystems** from.
+
+**public PooledSystem obtain(){}**
+
+This function is how the pooling is actually done. Either one of two things happens when this function is called: it creates a new **PooledSystem** and returns that, or it borrows one from the array and returns that one. It will only ever create a new **PooledSystem** if the rest are in use.
+
+**public void free(PooledSystem ps){}**
+
+This essentially how we put **PooledSystems** back in the pool once we're done with them. There is a failsafe if statement that prevents the app from crashing in case a particle system was contructed incorrectly. 
+
+Now I'll explain breifly how this all comes together to actually work in practice using a flowchart. 
+
+![Alt text](tut22.png)
+
+As you can see, it's a fairly simple concept logically, but it's not entirely intuitive and it's a bit tricky to make in practice. That being said. Using pooling whenever applicable reduces unnecessary contructor calls, which causes quite a bit of lag most of the time. This is the only optimization that my tutorial covers, but I will breifly explain the others as they are definitely relevant.
+
+**Decreasing Function Calls**
+
+This something that any programmer should naturally look at when trying to improve their code, especially when making algorithms. The most common place this can be done is by looking loops and making sure that every single loop is absolutely necessary.
+
+**More Efficient Calculations**
+
+This is fairly vague, but i'm essentially saying that certain things are surprisingly resource intensive to calculate. For example, using two variables instead of one can sometimes be faster than using a vector. If you're going to generate a lot of random numbers, generate a list ahead of time and just cycle through it. Maybe even using approximation methods for calculus and trig instead of actually doing the exact calculations. Basically, just find little things that can be done faster. Maybe even looking at some math libraries can be useful as well.
+
+**Multithreading**
+
+Multithreading has sort of become a programming buzzword as of late but it is still extremely useful. Ideally, one would have the game and the particle management in two different threads to maximize the resources allocated to the particle system. 
+***********************************************************
+***********************************************************
+***********************************************************
+                                           **Previous Tutorial Below** 
+***********************************************************
+***********************************************************
+***********************************************************
+***********************************************************
+
+
+
+
+
 **How to Make a Simple Particle System**
 
 The first thing we need to do is understand what a particle system really is. It's a fairly general term that is thrown around by a lot of people, but its meaning is not particularly well-understood. Essentially, a particle system is a manager that handles large amounts of particles at once. Particles are simply objects, stereotypically circles, which move around the screen in a manner specified by the particle system.
