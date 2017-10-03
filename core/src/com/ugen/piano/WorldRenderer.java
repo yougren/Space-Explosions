@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -32,7 +33,9 @@ public class WorldRenderer {
     private long initTimeD, initTimeB, initHit;
     private Random rand;
     private ParticleSystem ps;
-    private ArrayList<BadGuy> badGuys;
+    private BadGuy bg;
+    private BadGuyPool badGuyPool;
+    private Array<BadGuyPool.PooledBadGuy> badGuys;
     private ParticleSystemPool systemPool;
     private Array<ParticleSystemPool.PooledSystem> systems;
     private float width, height;
@@ -47,6 +50,7 @@ public class WorldRenderer {
     private Stage stage;
     private int score, totalParicles;
     private BitmapFont font;
+    private ArrayList<ParticleSystemPool.PooledSystem> deathExplosions;
 
 
     public WorldRenderer(GameWorld world){
@@ -56,7 +60,10 @@ public class WorldRenderer {
 
         rand = new Random();
 
-        badGuys = new ArrayList<BadGuy>();
+        bg = new BadGuy(new Vector2(0, 0));
+
+        badGuyPool = new BadGuyPool(bg, 10, 100);
+        badGuys = new Array<BadGuyPool.PooledBadGuy>();
 
         batch = new SpriteBatch();
         renderer = new ShapeRenderer();
@@ -105,6 +112,9 @@ public class WorldRenderer {
         score = 0;
 
         font = new BitmapFont();
+        font.getData().setScale(10);
+
+        deathExplosions = new ArrayList<ParticleSystemPool.PooledSystem>();
     }
 
     public void render(float delta){
@@ -119,7 +129,8 @@ public class WorldRenderer {
 
         if(System.currentTimeMillis() - initTimeD > 1000){
             initTimeD = System.currentTimeMillis();
-            badGuys.add(new BadGuy(new Vector2(rand.nextFloat() * width, rand.nextFloat() * height)));
+            badGuys.add(badGuyPool.obtain());
+            badGuys.get(badGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width, rand.nextFloat() * height));
             Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  "FREE: " + systemPool.getFree() + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax() + " , TOTAL PARTICLES: " + totalParicles);
 
         }
@@ -146,6 +157,7 @@ public class WorldRenderer {
                     dude.setHealth(dude.getHealth() - 5);
                     initHit = System.currentTimeMillis();
                 }
+
         }
 
         for(int i = systems.size - 1; i >= 0; i--){
@@ -161,8 +173,8 @@ public class WorldRenderer {
         }
 
         font.setColor(Color.WHITE);
-        font.draw(batch, "SCORE: " + score, width/2, height/2);
-        font.getData().setScale(5.0f);
+        font.draw(batch, "SCORE: " + score, 0,0);
+        //font.getData().setScale(5.0f);
 
         renderer.end();
         batch.end();
@@ -171,6 +183,14 @@ public class WorldRenderer {
         stage.draw();
 
         checkBulletCollisions();
+
+        if(dude.isDead()){
+            for(int i = 0; i < 3; i++) {
+                ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                temp.setPosition(new Vector2(dude.getPosition().x, dude.getPosition().y));
+                systems.add(temp);
+            }
+        }
     }
 
     public void drawHealthBar(){
@@ -184,13 +204,17 @@ public class WorldRenderer {
     public void checkBulletCollisions(){
         for(int ii = dude.getBullets().size() - 1; ii >= 0; ii--){
             Particle p = dude.getBullets().get(ii);
-            for(int i = badGuys.size() - 1; i > -1; i--){
+            for(int i = badGuys.size - 1; i >= 0; i--){
+                BadGuyPool.PooledBadGuy tempbg = badGuys.get(i);
+
                 if (p.intersects(badGuys.get(i).getHitbox())) {
+                    tempbg.free();
+                    badGuys.removeIndex(i);
                     ParticleSystemPool.PooledSystem temp = systemPool.obtain();
                     temp.setPosition(new Vector2(p.getX(), p.getY()));
                     systems.add(temp);
                     dude.getBullets().remove(p);
-                    badGuys.remove(i);
+
                     score += 420;
 
                     break;

@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Created by WilsonCS30 on 3/21/2017.
@@ -27,6 +28,7 @@ public class Dude {
     private int health, damageTimer;
     private Circle hitbox;
     private float width, height;
+    private Iterator<Particle> particleIter;
 
     public Dude(Vector2 position, Vector2 scale, float width, float height){
         damageTimer = 250;
@@ -51,15 +53,20 @@ public class Dude {
     public void draw(ShapeRenderer renderer, SpriteBatch batch){
         update();
 
-        renderer.setColor(color);
-        renderer.circle(position.x, position.y ,50.0f);
-        
+        if(!isDead()) {
+            renderer.setColor(color);
+            renderer.circle(position.x, position.y, 50.0f);
+        }
 
-        for(Particle p : bullets){
+        particleIter = bullets.iterator();
+
+        while(particleIter.hasNext()){
+            Particle p = particleIter.next();
+
             p.update();
             p.draw(batch);
             if(p.getX() < 0 || p.getX() > width || p.getY() < 0 || p.getY() > height) {
-                bullets.remove(p);
+                particleIter.remove();
             }
         }
     }
@@ -87,6 +94,10 @@ public class Dude {
         bullets.add(bullet);
 
         shot = true;
+    }
+
+    public boolean isDead(){
+        return health <= 0;
     }
 
     public void setVelocity(Vector2 velocity){

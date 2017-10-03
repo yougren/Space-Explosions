@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.Random;
+
 /**
  * Created by WilsonCS30 on 3/23/2017.
  */
@@ -13,6 +15,22 @@ public class BadGuy {
     private Vector2 position, velocity, acceleration, size, target;
     private float health;
     private Rectangle hitbox;
+    private Random rand;
+
+
+    public BadGuy(BadGuy bg){
+        Initialize(bg.getVelocity(), bg.getAcceleration(), bg.getPosition());
+    }
+
+    private void Initialize(Vector2 v, Vector2 a, Vector2 pos){
+        this.velocity = v;
+        this.acceleration = a;
+        this.position = pos;
+        size = new Vector2(100, 100);
+        hitbox = new Rectangle(position.x, position.y, size.x, size.y);
+
+        rand = new Random();
+    }
 
     public BadGuy(Vector2 pos){
         this.velocity = new Vector2();
@@ -20,6 +38,8 @@ public class BadGuy {
         this.position = pos;
         size = new Vector2(100, 100);
         hitbox = new Rectangle(position.x, position.y, size.x, size.y);
+
+        rand = new Random();
     }
 
     public void update(Vector2 newTarget){
@@ -37,12 +57,23 @@ public class BadGuy {
         renderer.rect(position.x, position.y, size.x, size.y);
     }
 
+    public void reset(){
+    }
+
     public void setPosition(Vector2 position){
         this.position = position;
         this.hitbox.setPosition(position);
     }
     public Vector2 getPosition(){
         return position;
+    }
+
+    public Vector2 getVelocity(){
+        return velocity;
+    }
+
+    public Vector2 getAcceleration(){
+        return acceleration;
     }
 
     public Rectangle getHitbox(){
