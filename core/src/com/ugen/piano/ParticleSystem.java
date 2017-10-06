@@ -24,6 +24,31 @@ public class ParticleSystem {
     private Random rand;
     private float randR, randG, randB;
 
+    public ParticleSystem(){
+        rand = new Random();
+
+        randR = rand.nextFloat();
+        randG = rand.nextFloat();
+        randB = rand.nextFloat();
+
+        sprite = new Sprite(new Texture("particle.png"), 4, 1);
+        sprite.setColor(new Color(randR, randG, randB, rand.nextFloat()));
+
+        this.maxParticles = 200;
+        this.particles = new ArrayList<Particle>();
+        this.active = new boolean[maxParticles];
+        this.activeParticles = 0;
+        this.duration = 1000;
+
+        for(int i = 0; i < maxParticles; i++) {
+            this.particles.add(new Particle(sprite, true));
+            active[i] = true;
+            particles.get(i).scale(4.0f);
+            this.particles.get(i).setPosition(position.x, position.y);
+            activeParticles++;
+        }
+    }
+
     public ParticleSystem(ParticleSystem ps){
         initialize(ps.getPosition(), ps.getBoundary(), ps.getMaxParticles());
     }
@@ -51,7 +76,7 @@ public class ParticleSystem {
         this.duration = 1000;
 
         for(int i = 0; i < maxParticles; i++) {
-            this.particles.add(new Particle(sprite));
+            this.particles.add(new Particle(sprite, true));
             active[i] = true;
             particles.get(i).scale(4.0f);
             this.particles.get(i).setPosition(position.x, position.y);
@@ -117,6 +142,9 @@ public class ParticleSystem {
         return position;
     }
 
+    public void setBoundary(Vector2 bound){
+        this.boundary = bound;
+    }
     public Vector2 getBoundary() {
         return boundary;
     }

@@ -21,9 +21,13 @@ public class Particle extends Sprite {
 
     private Random rand;
 
-    public Particle(Sprite sprite){
+    private String faction;
+
+    public Particle(Sprite sprite, boolean toInit){
         super(sprite);
-        initialize();
+
+        if(toInit)
+            initialize();
     }
 
     public void initialize(){
@@ -85,4 +89,11 @@ public class Particle extends Sprite {
         return currentLife < 0.0f;
     }
 
+    public String getFaction(){
+        return faction;
+    }
+
+    public void setFaction(String faction){
+        this.faction = faction;
+    }
 }

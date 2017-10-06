@@ -58,7 +58,7 @@ public class Dude {
             renderer.circle(position.x, position.y, 50.0f);
         }
 
-        particleIter = bullets.iterator();
+       /* particleIter = bullets.iterator();
 
         while(particleIter.hasNext()){
             Particle p = particleIter.next();
@@ -68,30 +68,27 @@ public class Dude {
             if(p.getX() < 0 || p.getX() > width || p.getY() < 0 || p.getY() > height) {
                 particleIter.remove();
             }
-        }
+        }*/
     }
 
-    public void shoot(Vector2 target){
+    public void shoot(Vector2 target, Particle bullet){
         double mag = Math.sqrt((target.x - position.x)*(target.x - position.x)
                 + (target.y - position.y)*(target.y - position.y));
 
         float velocityX = 10 * (float)((target.x - position.x) / mag);
         float velocityY = 10 * (float)((target.y - position.y) / mag);
 
-        float theta = (float)Math.atan((target.y - position.y) / (target.x - position.x));
+        float theta = (float)Math.atan(velocityY/ velocityX);
 
-        Particle bullet = new Particle(this.bullet);
-       // bullet.set(this.bullet);
+        //Particle bullet = new Particle(this.bullet, false);
+
         bullet.setPosition(position.x, position.y);
-        bullet.rotate(theta * 180 / (float)Math.PI + 90);
-
-
+        bullet.rotate(theta * 180 / (float)Math.PI);
+        bullet.setFaction("good");
+        bullet.setColor(Color.WHITE);
         bullet.setVelocity(new Vector2(velocityX, velocityY));
 
-
         bullet.setAcceleration(new Vector2(0.0f, 0.0f));
-
-        bullets.add(bullet);
 
         shot = true;
     }
