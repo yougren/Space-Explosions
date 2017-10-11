@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
@@ -16,7 +17,8 @@ import java.util.Random;
 
 public class ParticleSystem {
     private Sprite sprite;
-    private Vector2 position, boundary;
+    private Vector2 position;
+    private Rectangle boundary;
     private int maxParticles, activeParticles, duration;
     private ArrayList<Particle> particles;
     private boolean[] active;
@@ -25,7 +27,7 @@ public class ParticleSystem {
     private float randR, randG, randB;
 
     public ParticleSystem(){
-        rand = new Random();
+        /*rand = new Random();
 
         randR = rand.nextFloat();
         randG = rand.nextFloat();
@@ -46,18 +48,18 @@ public class ParticleSystem {
             particles.get(i).scale(4.0f);
             this.particles.get(i).setPosition(position.x, position.y);
             activeParticles++;
-        }
+        }*/
     }
 
     public ParticleSystem(ParticleSystem ps){
         initialize(ps.getPosition(), ps.getBoundary(), ps.getMaxParticles());
     }
 
-    public ParticleSystem(Vector2 position, Vector2 boundary, int maxParticles){
+    public ParticleSystem(Vector2 position, Rectangle boundary, int maxParticles){
         initialize(position, boundary, maxParticles);
     }
 
-    public void initialize(Vector2 position, Vector2 boundary, int maxParticles){
+    public void initialize(Vector2 position, Rectangle boundary, int maxParticles){
         rand = new Random();
 
         randR = rand.nextFloat();
@@ -102,8 +104,11 @@ public class ParticleSystem {
     public boolean updateParticle(Particle particle, float delta){
         particle.update(delta);
 
-        if(particle.isDead() || particle.getColor().a <= 0 || particle.getX() < 0 || particle.getX() > boundary.x || particle.getY() < 0 || particle.getY() > boundary.y)
+        if(particle.isDead() || particle.getColor().a <= 0 || particle.getX() < boundary.getX() ||
+                particle.getX() > boundary.getX() + boundary.getWidth() || particle.getY() < boundary.getY() ||
+                particle.getY() > boundary.getY() + boundary.getHeight()) {
             return false;
+        }
 
         return true;
     }
@@ -142,10 +147,11 @@ public class ParticleSystem {
         return position;
     }
 
-    public void setBoundary(Vector2 bound){
+    public void setBoundary(Rectangle bound){
         this.boundary = bound;
     }
-    public Vector2 getBoundary() {
+
+    public Rectangle getBoundary() {
         return boundary;
     }
 

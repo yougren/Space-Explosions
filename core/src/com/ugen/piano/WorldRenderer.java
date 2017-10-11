@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -52,7 +53,7 @@ public class WorldRenderer {
     private ParticlePool particlePool;
     private Array<ParticlePool.PooledParticle> pooledParticles;
 
-    private float width, height;
+    private float width, height, x1, y1, x2, y2;
     private OrthographicCamera cam;
     private Viewport viewport;
     private GameWorld world;
@@ -64,8 +65,9 @@ public class WorldRenderer {
     private Stage stage;
     private int score, totalParicles;
     private BitmapFont font;
-    private ArrayList<ParticleSystemPool.PooledSystem> deathExplosions;
-
+    private ArrayList<Rectangle> healthBlocks;
+    private Rectangle boundingBox;
+    private ArrayList<Hexagon> hexagons;
 
     public WorldRenderer(GameWorld world){
         this.world = world;
@@ -100,11 +102,12 @@ public class WorldRenderer {
 
         width = cam.viewportWidth;
         height = cam.viewportHeight;
+        boundingBox = new Rectangle(0, 0, width, height);
 
         dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f), width, height);
 
         ps = new ParticleSystem(new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2),
-                new Vector2(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), 200);
+                boundingBox, 150);
 
         systemPool = new ParticleSystemPool(ps, 10, 100);
         systems = new Array<ParticleSystemPool.PooledSystem>();
@@ -138,16 +141,34 @@ public class WorldRenderer {
         font = new BitmapFont();
         font.getData().setScale(10);
 
-        deathExplosions = new ArrayList<ParticleSystemPool.PooledSystem>();
+        healthBlocks = new ArrayList<Rectangle>();
+        int rectNum = dude.getHealth() / 10;
+
+        for(int i = 0; i < rectNum; i++){
+            healthBlocks.add(new Rectangle((4 * i + 1) * width / 123, height - 50, width / 41, width / 41));
+        }
+
+        hexagons = new ArrayList<Hexagon>();
+
+        int hexLength = 200;
+
+        for(int i = 0; i < 10; i++){
+            for(int j = 0; j < 10; j++){
+                if(i % 2 == 0)
+                    hexagons.add(new Hexagon(((2-(float)Math.cos(Math.PI/3))*i*hexLength),
+                            (float)Math.sqrt(3)*j*hexLength, hexLength));
+                else
+                    hexagons.add(new Hexagon((2-(float)Math.cos(Math.PI/3))*i*hexLength,
+                            (float)Math.sqrt(3)*j*hexLength - (float)Math.sqrt(3)*hexLength/2, hexLength));
+            }
+        }
     }
 
     public void render(float delta){
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        polyBatch.begin();
-        polyBatch.setColor(0, 0, 1, 1);
-        polyBatch.setProjectionMatrix(cam.combined);
+
         batch.begin();
         batch.setColor(new Color(0, 0, 1, 1));
         renderer.begin(ShapeRenderer.ShapeType.Filled);
@@ -159,32 +180,40 @@ public class WorldRenderer {
 
             if(rand.nextInt() % 2 == 0) {
                 badGuys.add(badGuyPool.obtain());
-                badGuys.get(badGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width, rand.nextFloat() * height));
+                badGuys.get(badGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
+                        rand.nextFloat() * height + boundingBox.getY()));
             }
 
             else {
                 rangedBadGuys.add(rangedBadGuyPool.obtain());
-                rangedBadGuys.get(rangedBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width, rand.nextFloat() * height));
+                rangedBadGuys.get(rangedBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
+                        rand.nextFloat() * height + boundingBox.getY()));
 
             }
         }
 
-        if(System.currentTimeMillis() - initTimeB > 250 && Math.abs(touchPadR.getKnobPercentX() + touchPadR.getKnobPercentY()) > 0){
+        if(System.currentTimeMillis() - initTimeB > 300 && Math.abs(touchPadR.getKnobPercentX() + touchPadR.getKnobPercentY()) > 0){
             initTimeB = System.currentTimeMillis();
             pooledParticles.add(particlePool.obtain());
             dude.shoot(new Vector2(dude.getPosition().x + touchPadR.getKnobPercentX(), dude.getPosition().y + touchPadR.getKnobPercentY()),
                    pooledParticles.get(pooledParticles.size - 1));
         }
 
-        Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  "FREE: " + systemPool.getFree() + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax() + " , TOTAL PARTICLES: " + totalParicles);
 
         totalParicles = 0;
 
         renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f);
 
+        x1 = dude.getPosition().x;
+        y1 = dude.getPosition().y;
+
         dude.setVelocity(new Vector2(touchPadL.getKnobPercentX() * 10, touchPadL.getKnobPercentY() * 10));
         dude.draw(renderer, batch);
-        drawHealthBar();
+
+        x2 = dude.getPosition().x;
+        y2 = dude.getPosition().y;
+
+        scroll(x2-x1, y2-y1);
 
         for(BadGuy b : badGuys){
             b.update(new Vector2(dude.getPosition().x - b.getHitbox().width/2, dude.getPosition().y - b.getHitbox().height/2));
@@ -217,13 +246,18 @@ public class WorldRenderer {
             }
         }
 
+        if(dude.getHealth() < healthBlocks.size()*10){
+            healthBlocks.remove(healthBlocks.size()-1);
+        }
+
         for(int i = pooledParticles.size - 1; i >= 0; i--){
             ParticlePool.PooledParticle p = pooledParticles.get(i);
 
             p.update();
             p.draw(batch);
 
-            if(p.getX() < 0 || p.getX() > width || p.getY() < 0 || p.getY() > height){
+            if(p.getX() < boundingBox.getX() || p.getX() > boundingBox.getX() + width
+                    || p.getY() < boundingBox.getY() || p.getY() > boundingBox.getY() + height){
                 p.free();
                 pooledParticles.removeIndex(i);
             }
@@ -231,6 +265,7 @@ public class WorldRenderer {
 
         for(int i = systems.size - 1; i >= 0; i--){
             ParticleSystemPool.PooledSystem system = systems.get(i);
+            system.setBoundary(boundingBox);
             system.draw(batch, delta);
 
             totalParicles += system.getActiveParticles();
@@ -244,30 +279,48 @@ public class WorldRenderer {
         font.setColor(Color.WHITE);
         font.draw(batch, "SCORE: " + score, 0,0);
         //font.getData().setScale(5.0f);
+        drawBackground();
 
         renderer.end();
         batch.end();
-        polyBatch.end();
 
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
 
         checkBulletCollisions();
 
-        if(dude.isDead()){
-            for(int i = 0; i < 3; i++) {
-                ParticleSystemPool.PooledSystem temp = systemPool.obtain();
-                temp.setPosition(new Vector2(dude.getPosition().x, dude.getPosition().y));
-                systems.add(temp);
-            }
+        while(dude.isDead()){
+
+        }
+
+        log();
+    }
+
+    public void log(){
+        Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  " , FREE: " + systemPool.getFree()
+                + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax() + " , TOTAL PARTICLES: " + totalParicles);
+        Gdx.app.log("DEBUG", "BOUNDINGX: " + boundingBox.getX() + " , BOUNDINGY: " + boundingBox.getY()
+                + " , MAXX: " + boundingBox.getX() + boundingBox.getWidth() + " , MAXY: " + boundingBox.getY() + boundingBox.getHeight());
+    }
+
+    public void drawBackground(){
+        for(Hexagon hex : hexagons){
+            hex.draw(renderer, new Color(0.3f, 0.2f, 0.7f, 0.7f));
         }
     }
 
-    public void drawHealthBar(){
-        int rectNum = dude.getHealth() / 10;
+    public void scroll(float dx, float dy){
+        drawHealthBar(dx, dy);
+        cam.translate(dx, dy);
+        touchPadL.moveBy(dx, dy);
+        touchPadR.moveBy(dx, dy);
+        boundingBox.setPosition(boundingBox.getX() + dx, boundingBox.getY() + dy);
+    }
 
-        for(int i = 0; i < rectNum; i++){
-            renderer.rect((4 * i + 1) * width / 123, height - 50, width / 41, width / 41);
+    public void drawHealthBar(float x, float y){
+        for(Rectangle r : healthBlocks){
+            r.setPosition(r.getX() + x, r.getY() + y);
+            renderer.rect(r.getX(), r.getY(), r.getWidth(), r.getHeight());
         }
     }
 
@@ -292,6 +345,7 @@ public class WorldRenderer {
                         tempbg.free();
                         badGuys.removeIndex(i);
                         ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                        temp.setBoundary(boundingBox);
                         temp.setPosition(new Vector2(p.getX(), p.getY()));
                         systems.add(temp);
 
