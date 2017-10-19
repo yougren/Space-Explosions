@@ -66,7 +66,7 @@ public class ParticleSystem {
         randG = rand.nextFloat();
         randB = rand.nextFloat();
 
-        sprite = new Sprite(new Texture("particle.png"), 4, 1);
+        sprite = new Sprite(new Texture("hexagon1600.png"));
         sprite.setColor(new Color(randR, randG, randB, rand.nextFloat()));
 
         this.position = position;

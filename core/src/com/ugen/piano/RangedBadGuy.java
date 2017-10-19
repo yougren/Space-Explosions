@@ -18,10 +18,8 @@ public class RangedBadGuy extends BadGuy {
     private ArrayList<Particle> bullets;
     private Sprite bullet;
 
-    private float width, height;
     private float fireRate = 0.5f;
     private long lastShot;
-    private Iterator<Particle> particleIter;
 
     public RangedBadGuy(RangedBadGuy rbg){
         super(rbg);
@@ -47,20 +45,7 @@ public class RangedBadGuy extends BadGuy {
     }
 
     public void update(Vector2 newTarget, SpriteBatch batch){
-        /*if(System.currentTimeMillis() - lastShot > 1000/fireRate)
-            shoot(newTarget);
 
-        particleIter = bullets.iterator();
-
-        while(particleIter.hasNext()){
-            Particle p = particleIter.next();
-
-            p.update();
-            p.draw(batch);
-            if(p.getX() < 0 || p.getX() > width || p.getY() < 0 || p.getY() > height) {
-                particleIter.remove();
-            }
-        }*/
     }
 
     public void shoot(Vector2 target, Particle bullet){

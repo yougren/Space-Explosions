@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
@@ -83,6 +84,10 @@ public class Particle extends Sprite {
 
     public boolean intersects(Rectangle rect){
         return rect.contains(getX(), getY());
+    }
+
+    public boolean intersects(Circle circle){
+        return circle.contains(getX(), getY());
     }
 
     public Boolean isDead(){

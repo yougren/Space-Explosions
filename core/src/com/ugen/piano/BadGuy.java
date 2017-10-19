@@ -12,9 +12,9 @@ import com.badlogic.gdx.math.Vector2;
 public class BadGuy {
     Vector2 size;
     Vector2 position;
-    private Vector2 velocity;
+    Vector2 velocity;
     private Vector2 acceleration;
-    private Rectangle hitbox;
+    Rectangle hitbox;
 
 
     public BadGuy(BadGuy bg){
@@ -52,8 +52,7 @@ public class BadGuy {
         renderer.rect(position.x, position.y, size.x, size.y);
     }
 
-    public void reset(){
-    }
+    public void reset(){}
 
     public void setPosition(Vector2 position){
         this.position = position;

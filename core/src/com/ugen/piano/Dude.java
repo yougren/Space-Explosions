@@ -21,28 +21,23 @@ import java.util.Iterator;
 public class Dude {
 
     private Sprite bullet;
-    private Vector2 position, velocity, scale;
+    private Vector2 position, velocity;
     private ArrayList<Particle> bullets;
     boolean shot = false;
     private Color color;
     private int health, damageTimer;
     private Circle hitbox;
-    private float width, height;
-    private Iterator<Particle> particleIter;
 
-    public Dude(Vector2 position, Vector2 scale, float width, float height){
+    public Dude(Vector2 position){
         damageTimer = 250;
         health = 300;
         bullet = new Sprite(new Texture("particle.png"));
         bullet.setColor(new Color(1, 1, 1, 1));
         this.position = position;
         this.velocity = new Vector2(0, 0);
-        this.scale = scale;
         bullets = new ArrayList<Particle>();
         color = new Color(0.1f, 0.3f, 0.8f, 1.0f);
         hitbox = new Circle(position, 50.0f);
-        this.width = width;
-        this.height = height;
     }
 
     public void update(){
@@ -75,8 +70,8 @@ public class Dude {
         double mag = Math.sqrt((target.x - position.x)*(target.x - position.x)
                 + (target.y - position.y)*(target.y - position.y));
 
-        float velocityX = 10 * (float)((target.x - position.x) / mag);
-        float velocityY = 10 * (float)((target.y - position.y) / mag);
+        float velocityX = 15 * (float)((target.x - position.x) / mag);
+        float velocityY = 15 * (float)((target.y - position.y) / mag);
 
         float theta = (float)Math.atan(velocityY/ velocityX);
 

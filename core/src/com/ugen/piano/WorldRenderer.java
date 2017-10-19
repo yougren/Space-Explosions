@@ -32,7 +32,6 @@ import java.util.Random;
 public class WorldRenderer {
     private SpriteBatch batch;
     private ShapeRenderer renderer;
-    private PolygonSpriteBatch polyBatch;
     private long initTimeD, initTimeB, initHit;
     private Random rand;
 
@@ -43,6 +42,14 @@ public class WorldRenderer {
     private RangedBadGuy rbg;
     private RangedBadGuyPool rangedBadGuyPool;
     private Array<RangedBadGuyPool.PooledRangedBadGuy> rangedBadGuys;
+
+    private SpinningBadGuy sbg;
+    private SpinningBadGuyPool sbgPool;
+    private Array<SpinningBadGuyPool.PooledSpinningBadGuy> spinningBadGuys;
+
+    private HexagonBadGuy hbg;
+    private HexBadGuyPool hexBadGuyPool;
+    private Array<HexBadGuyPool.PooledHexBadGuy> hexBadGuys;
 
     private ParticleSystem ps;
     private ParticleSystemPool systemPool;
@@ -80,12 +87,18 @@ public class WorldRenderer {
 
         bg = new BadGuy(new Vector2(0, 0));
         rbg = new RangedBadGuy(new Vector2(0, 0));
+        sbg = new SpinningBadGuy(new Vector2(0, 0));
+        hbg = new HexagonBadGuy(new Vector2(0, 0));
         p = new Particle(particleSprite, false);
 
         badGuyPool = new BadGuyPool(bg, 10, 100);
         badGuys = new Array<BadGuyPool.PooledBadGuy>();
         rangedBadGuyPool = new RangedBadGuyPool(rbg, 10, 100);
         rangedBadGuys = new Array<RangedBadGuyPool.PooledRangedBadGuy>();
+        sbgPool = new SpinningBadGuyPool(sbg, 10, 100);
+        spinningBadGuys = new Array<SpinningBadGuyPool.PooledSpinningBadGuy>();
+        hexBadGuyPool = new HexBadGuyPool(hbg, 10, 100);
+        hexBadGuys = new Array<HexBadGuyPool.PooledHexBadGuy>();
         particlePool = new ParticlePool(p, 100, 1000);
         pooledParticles = new Array<ParticlePool.PooledParticle>();
 
@@ -93,7 +106,6 @@ public class WorldRenderer {
         renderer = new ShapeRenderer();
         renderer.setAutoShapeType(true);
 
-        polyBatch = new PolygonSpriteBatch();
 
         cam = new OrthographicCamera(1.0f, (float) Gdx.graphics.getHeight() / (float)Gdx.graphics.getWidth());
         viewport = new ExtendViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), cam);
@@ -104,10 +116,10 @@ public class WorldRenderer {
         height = cam.viewportHeight;
         boundingBox = new Rectangle(0, 0, width, height);
 
-        dude = new Dude(new Vector2(width/2, height/2), new Vector2(1.0f, 1.0f), width, height);
+        dude = new Dude(new Vector2(width/2, height/2));
 
         ps = new ParticleSystem(new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2),
-                boundingBox, 150);
+                boundingBox, 100);
 
         systemPool = new ParticleSystemPool(ps, 10, 100);
         systems = new Array<ParticleSystemPool.PooledSystem>();
@@ -178,17 +190,32 @@ public class WorldRenderer {
         if(System.currentTimeMillis() - initTimeD > 1000){
             initTimeD = System.currentTimeMillis();
 
-            if(rand.nextInt() % 2 == 0) {
+            float tempF = rand.nextFloat();
+
+
+            if(tempF < .25f) {
                 badGuys.add(badGuyPool.obtain());
                 badGuys.get(badGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
                         rand.nextFloat() * height + boundingBox.getY()));
             }
 
-            else {
+            else if(tempF > .25f && tempF < .50f){
                 rangedBadGuys.add(rangedBadGuyPool.obtain());
                 rangedBadGuys.get(rangedBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
                         rand.nextFloat() * height + boundingBox.getY()));
 
+            }
+
+            else if(tempF > .50f && tempF < .75f){
+                spinningBadGuys.add(sbgPool.obtain());
+                spinningBadGuys.get(spinningBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
+                        rand.nextFloat() * height + boundingBox.getY()));
+            }
+
+            else{
+                hexBadGuys.add(hexBadGuyPool.obtain());
+                hexBadGuys.get(hexBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
+                        rand.nextFloat() * height + boundingBox.getY()));
             }
         }
 
@@ -245,6 +272,32 @@ public class WorldRenderer {
                 }
             }
         }
+
+        for(SpinningBadGuy b : spinningBadGuys){
+            b.update(new Vector2(dude.getPosition().x - b.getHitbox().width/2, dude.getPosition().y - b.getHitbox().height/2));
+            b.draw(renderer);
+            if(System.currentTimeMillis() - initHit > dude.getDamageTimer())
+                if(dude.intersects(b.getHitbox())){
+                    Gdx.app.log("DEBUG", "OW");
+                    dude.setHealth(dude.getHealth() - 5);
+                    initHit = System.currentTimeMillis();
+                }
+        }
+
+
+        for(HexagonBadGuy b : hexBadGuys){
+            b.update(new Vector2(dude.getPosition().x - b.getHitbox().width/2, dude.getPosition().y - b.getHitbox().height/2));
+            b.draw(renderer);
+            if(System.currentTimeMillis() - initHit > dude.getDamageTimer())
+                if(dude.intersects(b.getHitbox())){
+                    Gdx.app.log("DEBUG", "OW");
+                    dude.setHealth(dude.getHealth() - 5);
+                    initHit = System.currentTimeMillis();
+                }
+
+
+        }
+
 
         if(dude.getHealth() < healthBlocks.size()*10){
             healthBlocks.remove(healthBlocks.size()-1);
@@ -325,6 +378,8 @@ public class WorldRenderer {
     }
 
     public void checkBulletCollisions(){
+        boolean hit = false;
+
         for(int ii = pooledParticles.size - 1; ii >= 0; ii--){
             ParticlePool.PooledParticle p = pooledParticles.get(ii);
 
@@ -354,8 +409,13 @@ public class WorldRenderer {
 
                         score += 420;
 
+                        hit = true;
                         break;
                     }
+                }
+
+                if(hit){
+                    continue;
                 }
 
                 for (int i = rangedBadGuys.size - 1; i >= 0; i--) {
@@ -373,8 +433,64 @@ public class WorldRenderer {
                         pooledParticles.removeIndex(ii);
                         score += 420;
 
+                        hit = true;
                         break;
                     }
+                }
+
+                if(hit){
+                    continue;
+                }
+
+                for(int i = spinningBadGuys.size - 1; i >= 0; i--){
+                    SpinningBadGuyPool.PooledSpinningBadGuy tempbg = spinningBadGuys.get(i);
+
+                    if (p.intersects(spinningBadGuys.get(i).getHitbox())) {
+                        tempbg.free();
+                        spinningBadGuys.removeIndex(i);
+                        ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                        temp.setPosition(new Vector2(p.getX(), p.getY()));
+                        systems.add(temp);
+
+
+                        p.free();
+                        pooledParticles.removeIndex(ii);
+                        score += 420;
+
+                        hit = true;
+                        break;
+                    }
+                }
+
+            }
+            hit = false;
+
+            for(int i = hexBadGuys.size - 1; i >= 0; i--){
+                HexBadGuyPool.PooledHexBadGuy tempbg = hexBadGuys.get(i);
+
+                if (p.intersects(hexBadGuys.get(i).getHitBox())) {
+                    tempbg.free();
+
+
+
+                    Array<SpinningBadGuyPool.PooledSpinningBadGuy> tempA = hexBadGuys.get(i).explode(sbgPool);
+                    UgenUtils.concatArrays(tempA.toArray(), spinningBadGuys.toArray());
+                    for(int j = 0; j < 6; j++) {
+                        spinningBadGuys.add(tempA.get(j));
+                    }
+
+                    hexBadGuys.removeIndex(i);
+                    ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                    temp.setPosition(new Vector2(p.getX(), p.getY()));
+                    systems.add(temp);
+
+
+                    p.free();
+                    pooledParticles.removeIndex(ii);
+                    score += 420;
+
+                    hit = true;
+                    break;
                 }
             }
         }
