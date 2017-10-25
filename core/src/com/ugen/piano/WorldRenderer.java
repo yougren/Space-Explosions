@@ -32,49 +32,40 @@ import java.util.Random;
 public class WorldRenderer {
     private SpriteBatch batch;
     private ShapeRenderer renderer;
-    private long initTimeD, initTimeB, initHit;
+    private long initTimeD, initTimeB, initHit, bounceTime;
     private Random rand;
 
-    private BadGuy bg;
     private BadGuyPool badGuyPool;
     private Array<BadGuyPool.PooledBadGuy> badGuys;
 
-    private RangedBadGuy rbg;
     private RangedBadGuyPool rangedBadGuyPool;
     private Array<RangedBadGuyPool.PooledRangedBadGuy> rangedBadGuys;
 
-    private SpinningBadGuy sbg;
     private SpinningBadGuyPool sbgPool;
     private Array<SpinningBadGuyPool.PooledSpinningBadGuy> spinningBadGuys;
 
-    private HexagonBadGuy hbg;
     private HexBadGuyPool hexBadGuyPool;
     private Array<HexBadGuyPool.PooledHexBadGuy> hexBadGuys;
 
-    private ParticleSystem ps;
     private ParticleSystemPool systemPool;
     private Array<ParticleSystemPool.PooledSystem> systems;
 
-    private Particle p;
-    private Sprite particleSprite;
     private ParticlePool particlePool;
     private Array<ParticlePool.PooledParticle> pooledParticles;
 
     private float width, height, x1, y1, x2, y2;
     private OrthographicCamera cam;
-    private Viewport viewport;
     private GameWorld world;
     private Dude dude;
     private Touchpad touchPadR, touchPadL;
-    private Touchpad.TouchpadStyle touchpadStyle;
-    private Skin touchpadSkin;
-    private Drawable touchpadBack, touchpadFront;
     private Stage stage;
-    private int score, totalParicles;
+    private int score, totalParticles;
     private BitmapFont font;
     private ArrayList<Rectangle> healthBlocks;
     private Rectangle boundingBox;
     private ArrayList<Hexagon> hexagons;
+    private Vector2 bouncePos;
+    private int bounceCase;
 
     public WorldRenderer(GameWorld world){
         this.world = world;
@@ -83,13 +74,13 @@ public class WorldRenderer {
 
         rand = new Random();
 
-        particleSprite = new Sprite(new Texture("particle.png"));
+        Sprite particleSprite = new Sprite(new Texture("particle.png"));
 
-        bg = new BadGuy(new Vector2(0, 0));
-        rbg = new RangedBadGuy(new Vector2(0, 0));
-        sbg = new SpinningBadGuy(new Vector2(0, 0));
-        hbg = new HexagonBadGuy(new Vector2(0, 0));
-        p = new Particle(particleSprite, false);
+        BadGuy bg = new BadGuy(new Vector2(0, 0));
+        RangedBadGuy rbg = new RangedBadGuy(new Vector2(0, 0));
+        SpinningBadGuy sbg = new SpinningBadGuy(new Vector2(0, 0));
+        HexagonBadGuy hbg = new HexagonBadGuy(new Vector2(0, 0));
+        Particle p = new Particle(particleSprite, false);
 
         badGuyPool = new BadGuyPool(bg, 10, 100);
         badGuys = new Array<BadGuyPool.PooledBadGuy>();
@@ -108,7 +99,7 @@ public class WorldRenderer {
 
 
         cam = new OrthographicCamera(1.0f, (float) Gdx.graphics.getHeight() / (float)Gdx.graphics.getWidth());
-        viewport = new ExtendViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), cam);
+        Viewport viewport = new ExtendViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), cam);
         viewport.apply();
         viewport.update(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
 
@@ -118,20 +109,20 @@ public class WorldRenderer {
 
         dude = new Dude(new Vector2(width/2, height/2));
 
-        ps = new ParticleSystem(new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2),
+        ParticleSystem ps = new ParticleSystem(new Vector2(Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2),
                 boundingBox, 100);
 
         systemPool = new ParticleSystemPool(ps, 10, 100);
         systems = new Array<ParticleSystemPool.PooledSystem>();
 
-        touchpadSkin = new Skin();
+        Skin touchpadSkin = new Skin();
         touchpadSkin.add("touchBackground", AssetManager.getJoystickBackground());
         touchpadSkin.add("touchForeground", AssetManager.getJoystickForeground());
 
-        touchpadStyle = new Touchpad.TouchpadStyle();
+        Touchpad.TouchpadStyle touchpadStyle = new Touchpad.TouchpadStyle();
 
-        touchpadBack = touchpadSkin.getDrawable("touchBackground");
-        touchpadFront = touchpadSkin.getDrawable("touchForeground");
+        Drawable touchpadBack = touchpadSkin.getDrawable("touchBackground");
+        Drawable touchpadFront = touchpadSkin.getDrawable("touchForeground");
 
         touchpadStyle.background = touchpadBack;
         touchpadStyle.knob = touchpadFront;
@@ -180,12 +171,10 @@ public class WorldRenderer {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-
         batch.begin();
         batch.setColor(new Color(0, 0, 1, 1));
         renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setProjectionMatrix(cam.combined);
-
 
         if(System.currentTimeMillis() - initTimeD > 1000){
             initTimeD = System.currentTimeMillis();
@@ -226,16 +215,69 @@ public class WorldRenderer {
                    pooledParticles.get(pooledParticles.size - 1));
         }
 
-
-        totalParicles = 0;
+        totalParticles = 0;
 
         renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f);
 
         x1 = dude.getPosition().x;
         y1 = dude.getPosition().y;
 
-        dude.setVelocity(new Vector2(touchPadL.getKnobPercentX() * 10, touchPadL.getKnobPercentY() * 10));
-        dude.draw(renderer, batch);
+        dude.setAcceleration(new Vector2(touchPadL.getKnobPercentX(), touchPadL.getKnobPercentY()));
+        //dude.setVelocity(new Vector2(touchPadL.getKnobPercentX() * 10, touchPadL.getKnobPercentY() * 10));
+        dude.update();
+
+        if(dude.getPosition().x < hexagons.get(0).getX()){
+            bounceCase = 0;
+            bounceTime = System.currentTimeMillis();
+            bouncePos = new Vector2(dude.getPosition().x, dude.getPosition().y);
+            dude.setVelocity(new Vector2(5, dude.getVelocity().y));
+            dude.setAcceleration(new Vector2(0, 0));
+            dude.update();
+        }
+
+        if(dude.getPosition().x > hexagons.get(91).getX()){
+            bounceCase = 0;
+            bounceTime = System.currentTimeMillis();
+            bouncePos = new Vector2(dude.getPosition().x, dude.getPosition().y);
+            dude.setVelocity(new Vector2(-5, dude.getVelocity().y));
+            dude.setAcceleration(new Vector2(0, 0));
+            dude.update();
+        }
+
+        if(dude.getPosition().y < hexagons.get(0).getY()){
+            bounceCase = 1;
+            bounceTime = System.currentTimeMillis();
+            bouncePos = new Vector2(dude.getPosition().x, dude.getPosition().y);
+            dude.setVelocity(new Vector2(dude.getVelocity().x, 5));
+            dude.setAcceleration(new Vector2(0, 0));
+            dude.update();
+        }
+
+        if(dude.getPosition().y > hexagons.get(89).getY()){
+            bounceCase = 1;
+            bounceTime = System.currentTimeMillis();
+            bouncePos = new Vector2(dude.getPosition().x, dude.getPosition().y);
+            dude.setVelocity(new Vector2(dude.getVelocity().x, -5));
+            dude.setAcceleration(new Vector2(0, 0));
+            dude.update();
+        }
+
+        if(System.currentTimeMillis() - bounceTime < 1000){
+            renderer.setColor(new Color(0.2f, 0.2f, 0.5f, 1.0f - (float) (System.currentTimeMillis() - bounceTime) / 1000));
+
+            if(bounceCase == 0) {
+                //Gdx.app.log("DEBUG", "BOUNCE: " + (1.0f - (float) (System.currentTimeMillis() - bounceTime) / 1000));
+                renderer.line(bouncePos.x, bouncePos.y + 150.0f - 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000),
+                        bouncePos.x, bouncePos.y - 150.0f + 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000));
+            }
+            else if(bounceCase == 1){
+                renderer.line(bouncePos.x + 150.0f - 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000), bouncePos.y,
+                        bouncePos.x - 150.0f + 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000), bouncePos.y);
+
+            }
+        }
+
+        dude.draw(renderer, batch, false);
 
         x2 = dude.getPosition().x;
         y2 = dude.getPosition().y;
@@ -245,13 +287,13 @@ public class WorldRenderer {
         for(BadGuy b : badGuys){
             b.update(new Vector2(dude.getPosition().x - b.getHitbox().width/2, dude.getPosition().y - b.getHitbox().height/2));
             b.draw(renderer);
-            if(System.currentTimeMillis() - initHit > dude.getDamageTimer())
-                if(dude.intersects(b.getHitbox())){
+            if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
+                if (dude.intersects(b.getHitbox())) {
                     Gdx.app.log("DEBUG", "OW");
                     dude.setHealth(dude.getHealth() - 5);
                     initHit = System.currentTimeMillis();
                 }
-
+            }
         }
 
         for(RangedBadGuy b : rangedBadGuys){
@@ -273,31 +315,36 @@ public class WorldRenderer {
             }
         }
 
-        for(SpinningBadGuy b : spinningBadGuys){
-            b.update(new Vector2(dude.getPosition().x - b.getHitbox().width/2, dude.getPosition().y - b.getHitbox().height/2));
+        for(int i = spinningBadGuys.size - 1; i >= 0; i--){
+            SpinningBadGuyPool.PooledSpinningBadGuy b = spinningBadGuys.get(i);
+            b.update(new Vector2(dude.getPosition().x, dude.getPosition().y));
             b.draw(renderer);
-            if(System.currentTimeMillis() - initHit > dude.getDamageTimer())
-                if(dude.intersects(b.getHitbox())){
+            if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
+                if (dude.intersects(b.getHitBox())) {
                     Gdx.app.log("DEBUG", "OW");
-                    dude.setHealth(dude.getHealth() - 5);
+                    dude.setHealth(dude.getHealth() - 20);
                     initHit = System.currentTimeMillis();
+                    spinningBadGuys.removeIndex(i);
+                    b.free();
+                    ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                    temp.setBoundary(boundingBox);
+                    temp.setPosition(new Vector2(b.getX(), b.getY()));
+                    systems.add(temp);
                 }
+            }
         }
-
 
         for(HexagonBadGuy b : hexBadGuys){
             b.update(new Vector2(dude.getPosition().x - b.getHitbox().width/2, dude.getPosition().y - b.getHitbox().height/2));
             b.draw(renderer);
-            if(System.currentTimeMillis() - initHit > dude.getDamageTimer())
-                if(dude.intersects(b.getHitbox())){
+            if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
+                if (dude.intersects(b.getHitbox())) {
                     Gdx.app.log("DEBUG", "OW");
                     dude.setHealth(dude.getHealth() - 5);
                     initHit = System.currentTimeMillis();
                 }
-
-
+            }
         }
-
 
         if(dude.getHealth() < healthBlocks.size()*10){
             healthBlocks.remove(healthBlocks.size()-1);
@@ -321,7 +368,7 @@ public class WorldRenderer {
             system.setBoundary(boundingBox);
             system.draw(batch, delta);
 
-            totalParicles += system.getActiveParticles();
+            totalParticles += system.getActiveParticles();
 
             if(system.isComplete()){
                 system.free();
@@ -346,23 +393,23 @@ public class WorldRenderer {
 
         }
 
-        log();
+        //log();
     }
 
     public void log(){
         Gdx.app.log("DEBUG", "FPS: " + Gdx.graphics.getFramesPerSecond() +  " , FREE: " + systemPool.getFree()
-                + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax() + " , TOTAL PARTICLES: " + totalParicles);
+                + " , IN USE: " + systems.size + " , MAX: " + systemPool.getMax() + " , TOTAL PARTICLES: " + totalParticles);
         Gdx.app.log("DEBUG", "BOUNDINGX: " + boundingBox.getX() + " , BOUNDINGY: " + boundingBox.getY()
                 + " , MAXX: " + boundingBox.getX() + boundingBox.getWidth() + " , MAXY: " + boundingBox.getY() + boundingBox.getHeight());
     }
 
-    public void drawBackground(){
+    private void drawBackground(){
         for(Hexagon hex : hexagons){
             hex.draw(renderer, new Color(0.3f, 0.2f, 0.7f, 0.7f));
         }
     }
 
-    public void scroll(float dx, float dy){
+    private void scroll(float dx, float dy){
         drawHealthBar(dx, dy);
         cam.translate(dx, dy);
         touchPadL.moveBy(dx, dy);
@@ -370,14 +417,26 @@ public class WorldRenderer {
         boundingBox.setPosition(boundingBox.getX() + dx, boundingBox.getY() + dy);
     }
 
-    public void drawHealthBar(float x, float y){
+    private void drawHealthBar(float x, float y){
         for(Rectangle r : healthBlocks){
             r.setPosition(r.getX() + x, r.getY() + y);
             renderer.rect(r.getX(), r.getY(), r.getWidth(), r.getHeight());
         }
     }
 
-    public void checkBulletCollisions(){
+    private void killBadGuy(int ii, ParticlePool.PooledParticle p){
+        ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+        temp.setBoundary(boundingBox);
+        temp.setPosition(new Vector2(p.getX(), p.getY()));
+        systems.add(temp);
+
+        p.free();
+        pooledParticles.removeIndex(ii);
+
+        score += 420;
+    }
+
+    private void checkBulletCollisions(){
         boolean hit = false;
 
         for(int ii = pooledParticles.size - 1; ii >= 0; ii--){
@@ -397,18 +456,9 @@ public class WorldRenderer {
                     BadGuyPool.PooledBadGuy tempbg = badGuys.get(i);
 
                     if (p.intersects(badGuys.get(i).getHitbox())) {
-                        tempbg.free();
                         badGuys.removeIndex(i);
-                        ParticleSystemPool.PooledSystem temp = systemPool.obtain();
-                        temp.setBoundary(boundingBox);
-                        temp.setPosition(new Vector2(p.getX(), p.getY()));
-                        systems.add(temp);
-
-                        p.free();
-                        pooledParticles.removeIndex(ii);
-
-                        score += 420;
-
+                        tempbg.free();
+                        killBadGuy(ii,  p);
                         hit = true;
                         break;
                     }
@@ -422,17 +472,9 @@ public class WorldRenderer {
                     RangedBadGuyPool.PooledRangedBadGuy tempbg = rangedBadGuys.get(i);
 
                     if (p.intersects(rangedBadGuys.get(i).getHitbox())) {
-                        tempbg.free();
                         rangedBadGuys.removeIndex(i);
-                        ParticleSystemPool.PooledSystem temp = systemPool.obtain();
-                        temp.setPosition(new Vector2(p.getX(), p.getY()));
-                        systems.add(temp);
-
-
-                        p.free();
-                        pooledParticles.removeIndex(ii);
-                        score += 420;
-
+                        tempbg.free();
+                        killBadGuy(ii,  p);
                         hit = true;
                         break;
                     }
@@ -445,54 +487,45 @@ public class WorldRenderer {
                 for(int i = spinningBadGuys.size - 1; i >= 0; i--){
                     SpinningBadGuyPool.PooledSpinningBadGuy tempbg = spinningBadGuys.get(i);
 
-                    if (p.intersects(spinningBadGuys.get(i).getHitbox())) {
-                        tempbg.free();
+                    if (p.intersects(spinningBadGuys.get(i).getHitBox())) {
                         spinningBadGuys.removeIndex(i);
-                        ParticleSystemPool.PooledSystem temp = systemPool.obtain();
-                        temp.setPosition(new Vector2(p.getX(), p.getY()));
-                        systems.add(temp);
-
-
-                        p.free();
-                        pooledParticles.removeIndex(ii);
-                        score += 420;
-
+                        tempbg.free();
+                        killBadGuy(ii,  p);
                         hit = true;
                         break;
                     }
                 }
 
-            }
-            hit = false;
+                if(hit) {
+                    continue;
+                }
 
-            for(int i = hexBadGuys.size - 1; i >= 0; i--){
-                HexBadGuyPool.PooledHexBadGuy tempbg = hexBadGuys.get(i);
+                for(int i = hexBadGuys.size - 1; i >= 0; i--){
+                    HexBadGuyPool.PooledHexBadGuy tempbg = hexBadGuys.get(i);
 
-                if (p.intersects(hexBadGuys.get(i).getHitBox())) {
-                    tempbg.free();
+                    if (p.intersects(hexBadGuys.get(i).getHitBox())) {
+                        tempbg.free();
 
+                        Array<SpinningBadGuyPool.PooledSpinningBadGuy> tempA = hexBadGuys.get(i).explode(sbgPool);
+                        UgenUtils.concatArrays(tempA.toArray(), spinningBadGuys.toArray());
+                        for(int j = 0; j < 6; j++) {
+                            spinningBadGuys.add(tempA.get(j));
+                        }
 
+                        hexBadGuys.removeIndex(i);
+                        ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                        temp.setPosition(new Vector2(p.getX(), p.getY()));
+                        systems.add(temp);
 
-                    Array<SpinningBadGuyPool.PooledSpinningBadGuy> tempA = hexBadGuys.get(i).explode(sbgPool);
-                    UgenUtils.concatArrays(tempA.toArray(), spinningBadGuys.toArray());
-                    for(int j = 0; j < 6; j++) {
-                        spinningBadGuys.add(tempA.get(j));
+                        p.free();
+                        pooledParticles.removeIndex(ii);
+                        score += 420;
+
+                        break;
                     }
-
-                    hexBadGuys.removeIndex(i);
-                    ParticleSystemPool.PooledSystem temp = systemPool.obtain();
-                    temp.setPosition(new Vector2(p.getX(), p.getY()));
-                    systems.add(temp);
-
-
-                    p.free();
-                    pooledParticles.removeIndex(ii);
-                    score += 420;
-
-                    hit = true;
-                    break;
                 }
             }
+            hit = false;
         }
     }
 

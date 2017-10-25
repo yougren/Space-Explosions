@@ -21,7 +21,7 @@ import java.util.Iterator;
 public class Dude {
 
     private Sprite bullet;
-    private Vector2 position, velocity;
+    private Vector2 position, velocity, acceleration;
     private ArrayList<Particle> bullets;
     boolean shot = false;
     private Color color;
@@ -35,35 +35,31 @@ public class Dude {
         bullet.setColor(new Color(1, 1, 1, 1));
         this.position = position;
         this.velocity = new Vector2(0, 0);
+        this.acceleration = new Vector2(0, 0);
         bullets = new ArrayList<Particle>();
         color = new Color(0.1f, 0.3f, 0.8f, 1.0f);
         hitbox = new Circle(position, 50.0f);
     }
 
     public void update(){
+        if(UgenUtils.getMagnitude(velocity) < 10)
+            velocity.add(acceleration);
+        else
+            velocity.sub(new Vector2(velocity.x/10, velocity.y/10));
+
+
         position.add(velocity);
         hitbox.setPosition(position);
     }
 
-    public void draw(ShapeRenderer renderer, SpriteBatch batch){
-        update();
+    public void draw(ShapeRenderer renderer, SpriteBatch batch, boolean update){
+        if(update)
+            update();
 
         if(!isDead()) {
             renderer.setColor(color);
             renderer.circle(position.x, position.y, 50.0f);
         }
-
-       /* particleIter = bullets.iterator();
-
-        while(particleIter.hasNext()){
-            Particle p = particleIter.next();
-
-            p.update();
-            p.draw(batch);
-            if(p.getX() < 0 || p.getX() > width || p.getY() < 0 || p.getY() > height) {
-                particleIter.remove();
-            }
-        }*/
     }
 
     public void shoot(Vector2 target, Particle bullet){
@@ -96,24 +92,27 @@ public class Dude {
         this.velocity = velocity;
     }
 
+    public Vector2 getVelocity(){return velocity;}
+
+    public void setAcceleration(Vector2 acceleration){this.acceleration = acceleration;}
+
+    public void applyForce(Vector2 force){this.acceleration.add(force);}
+
     public void setHealth(int health){
         this.health = health;
     }
 
-    public int getHealth(){
-        return health;
-    }
+    public int getHealth(){return health;}
 
     public boolean hasShot(){
         return shot;
     }
 
     public Vector2 getPosition(){
-        return position;
+        return this.position;
     }
 
     public ArrayList<Particle> getBullets(){
-
         return bullets;
     }
 
@@ -123,7 +122,12 @@ public class Dude {
 
     public boolean intersects(Rectangle rect){
         return rect.contains(position.x, position.y) || hitbox.contains(rect.getX(), rect.getY()) ||
-        hitbox.contains(rect.getX() + rect.getWidth(), rect.getY()) || hitbox.contains(rect.getX(), rect.getY() + rect.getHeight())
+        hitbox.contains(rect.getX() + rect.getWidth(), rect.getY()) || hitbox.contains(rect.getX(),
+                rect.getY() + rect.getHeight())
         || hitbox.contains(rect.getX() + rect.getWidth(), rect.getY() + rect.getHeight());
+    }
+
+    public boolean intersects(Circle circle){
+        return hitbox.overlaps(circle);
     }
 }

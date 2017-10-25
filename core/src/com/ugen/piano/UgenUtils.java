@@ -1,5 +1,7 @@
 package com.ugen.piano;
 
+import com.badlogic.gdx.math.Vector2;
+
 import java.lang.reflect.Array;
 
 /**
@@ -21,5 +23,9 @@ public  class UgenUtils {
         System.arraycopy(b, 0, c, aLen, bLen);
 
         return c;
+    }
+
+    public static float getMagnitude(Vector2 vec){
+        return (float)Math.sqrt(vec.x*vec.x + vec.y*vec.y);
     }
 }

@@ -2,6 +2,7 @@ package com.ugen.piano;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 
 /**
@@ -13,25 +14,26 @@ public class SpinningBadGuy extends BadGuy {
     private double theta, omega, alpha;
     private float velMag, length;
     private float[] vertices;
+    private Circle hitBox;
 
     public SpinningBadGuy(BadGuy bg){
         super(bg);
-        theta = 0;
-        omega = Math.PI/360;
-        alpha = Math.PI/2160;
-        velMag = 5;
-        vertices = new float[6];
-        length = 50;
+        init();
     }
 
     public SpinningBadGuy(Vector2 pos){
         super(pos);
+        init();
+    }
+
+    public void init(){
         theta = 0;
         omega = Math.PI/360;
         alpha = Math.PI/2160;
         velMag = 5;
         vertices = new float[6];
         length = 50;
+        hitBox = new Circle(position.x, position.y, length);
     }
 
     @Override
@@ -44,7 +46,7 @@ public class SpinningBadGuy extends BadGuy {
         omega += alpha;
         theta += omega;
 
-        hitbox.setPosition(position);
+        hitBox.setPosition(position);
         position.add(velocity);
     }
 
@@ -69,5 +71,9 @@ public class SpinningBadGuy extends BadGuy {
         omega = Math.PI/360;
         theta = 0;
         velMag = 5;
+    }
+
+    public Circle getHitBox(){
+        return hitBox;
     }
 }

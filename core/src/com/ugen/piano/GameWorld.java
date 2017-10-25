@@ -11,8 +11,6 @@ public class GameWorld {
 
     public GameWorld(PianoThing game){
         this.game = game;
-
-
     }
 
     public void update(float delta){

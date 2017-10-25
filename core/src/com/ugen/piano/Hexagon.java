@@ -66,4 +66,12 @@ public class Hexagon {
         hexVertices[10] = x-l;
         hexVertices[11] = y;
     }
+
+    public float getX(){
+        return posX;
+    }
+
+    public float getY(){
+        return posY;
+    }
 }
