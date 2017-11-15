@@ -1,7 +1,8 @@
-package com.ugen.piano;
+package com.ugen.piano.Pools;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
+import com.ugen.piano.ParticleSystem;
 
 /**
  * Created by eugen_000 on 3/30/2017.

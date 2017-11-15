@@ -1,9 +1,10 @@
-package com.ugen.piano;
+package com.ugen.piano.Pools;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.utils.Array;
+import com.ugen.piano.Particle;
 
 /**
  * Created by Eugene Munblit on 10/3/2017.

@@ -1,46 +1,33 @@
-package com.ugen.piano;
+package com.ugen.piano.Pools;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Array;
+import com.ugen.piano.BadGuys.BadGuy;
+import com.ugen.piano.BadGuys.RangedBadGuy;
 
 /**
  * Created by Eugene Munblit on 10/3/2017.
  */
 
-public class RangedBadGuyPool {
+public class RangedBadGuyPool{
     private RangedBadGuy bg;
     public final int max;
-    private final Array<PooledRangedBadGuy> freeRangedBadGuys;
+    private final Array<RangedBadGuy> freeRangedBadGuys;
 
     public RangedBadGuyPool(RangedBadGuy bg, int initialCapacity, int max){
-        freeRangedBadGuys = new Array<PooledRangedBadGuy>(false, initialCapacity);
+        freeRangedBadGuys = new Array<RangedBadGuy>(false, initialCapacity);
 
         for(int i = 0; i < initialCapacity; i++)
-            freeRangedBadGuys.add(new PooledRangedBadGuy(bg));
+            freeRangedBadGuys.add(new RangedBadGuy(bg));
 
         this.max = max;
         this.bg = bg;
     }
 
-    public class PooledRangedBadGuy extends RangedBadGuy{
-        PooledRangedBadGuy(RangedBadGuy bg){
-            super(bg);
-        }
-
-        @Override
-        public void reset(){
-            super.reset();
-        }
-
-        public void free(){
-            RangedBadGuyPool.this.free(this);
-        }
-    }
-
-    public PooledRangedBadGuy obtain(){
-        PooledRangedBadGuy bg;
+    public RangedBadGuy obtain(){
+        RangedBadGuy bg;
         if(freeRangedBadGuys.size == 0){
-            bg = new PooledRangedBadGuy(this.bg);
+            bg = new RangedBadGuy(this.bg);
         }
         else
             bg = freeRangedBadGuys.pop();
@@ -49,7 +36,7 @@ public class RangedBadGuyPool {
         return bg;
     }
 
-    public void free(PooledRangedBadGuy bg){
+    public void free(RangedBadGuy bg){
         if(bg == null){
             Gdx.app.log("DEBUG", "RangedBadGuy IS NULL");
         }
@@ -66,7 +53,7 @@ public class RangedBadGuyPool {
         return freeRangedBadGuys.size;
     }
 
-    protected void reset(RangedBadGuy bg){
+    protected void reset(com.ugen.piano.BadGuys.RangedBadGuy bg){
         bg.reset();
     }
 }

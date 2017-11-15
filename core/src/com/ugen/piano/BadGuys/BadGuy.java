@@ -1,9 +1,11 @@
-package com.ugen.piano;
+package com.ugen.piano.BadGuys;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.ugen.piano.Pools.BadGuyPool;
 
 /**
  * Created by WilsonCS30 on 3/23/2017.
@@ -14,7 +16,7 @@ public class BadGuy {
     Vector2 position;
     Vector2 velocity;
     private Vector2 acceleration;
-    Rectangle hitbox;
+    Circle hitbox;
 
 
     public BadGuy(BadGuy bg){
@@ -26,7 +28,7 @@ public class BadGuy {
         this.acceleration = a;
         this.position = pos;
         size = new Vector2(100, 100);
-        hitbox = new Rectangle(position.x, position.y, size.x, size.y);
+        hitbox = new Circle(position.x + size.x/2, position.y + size.y / 2, size.x/2);
     }
 
     public BadGuy(Vector2 pos){
@@ -34,7 +36,7 @@ public class BadGuy {
         this.acceleration = new Vector2(0, 0);
         this.position = pos;
         size = new Vector2(100, 100);
-        hitbox = new Rectangle(position.x, position.y, size.x, size.y);
+        hitbox = new Circle(position.x + size.x/2, position.y + size.y/2, size.x/2);
     }
 
     public void update(Vector2 newTarget){
@@ -70,7 +72,9 @@ public class BadGuy {
         return acceleration;
     }
 
-    public Rectangle getHitbox(){
+    public Vector2 getSize(){return size;}
+
+    public Circle getHitbox(){
         return hitbox;
     }
 
@@ -81,4 +85,6 @@ public class BadGuy {
     public float getY(){
         return position.y;
     }
+
+
 }

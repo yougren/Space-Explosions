@@ -1,9 +1,11 @@
-package com.ugen.piano;
+package com.ugen.piano.BadGuys;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.ugen.piano.Pools.SpinningBadGuyPool;
 
 /**
  * Created by Eugene Munblit on 10/16/2017.
@@ -73,7 +75,9 @@ public class SpinningBadGuy extends BadGuy {
         velMag = 5;
     }
 
-    public Circle getHitBox(){
+
+    @Override
+    public Circle getHitbox(){
         return hitBox;
     }
 }

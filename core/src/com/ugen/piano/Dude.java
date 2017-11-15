@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 
 /**
  * Created by WilsonCS30 on 3/21/2017.
@@ -20,6 +21,7 @@ import java.util.Iterator;
 
 public class Dude {
 
+    private Random random;
     private Sprite bullet;
     private Vector2 position, velocity, acceleration;
     private ArrayList<Particle> bullets;
@@ -27,8 +29,13 @@ public class Dude {
     private Color color;
     private int health, damageTimer;
     private Circle hitbox;
+    private String shootType = "normal";
+    private long fireRate, powerupLength, powerupInit;
+    private Barrier barrier;
+    private ArrayList<Powerup> powerups;
 
     public Dude(Vector2 position){
+        random = new Random();
         damageTimer = 250;
         health = 300;
         bullet = new Sprite(new Texture("particle.png"));
@@ -39,6 +46,9 @@ public class Dude {
         bullets = new ArrayList<Particle>();
         color = new Color(0.1f, 0.3f, 0.8f, 1.0f);
         hitbox = new Circle(position, 50.0f);
+        fireRate = 300;
+        powerupLength = 5000;
+        powerups = new ArrayList<Powerup>();
     }
 
     public void update(){
@@ -57,31 +67,74 @@ public class Dude {
             update();
 
         if(!isDead()) {
+
+            if (shootType.equals("barrier")) {
+                barrier.setPosition(position);
+                barrier.draw(renderer);
+            }
             renderer.setColor(color);
             renderer.circle(position.x, position.y, 50.0f);
         }
     }
 
-    public void shoot(Vector2 target, Particle bullet){
-        double mag = Math.sqrt((target.x - position.x)*(target.x - position.x)
-                + (target.y - position.y)*(target.y - position.y));
+    public void shoot(Vector2 target, ArrayList<Particle> bullets){
+        double mag = Math.sqrt((target.x - position.x) * (target.x - position.x)
+                + (target.y - position.y) * (target.y - position.y));
 
-        float velocityX = 15 * (float)((target.x - position.x) / mag);
-        float velocityY = 15 * (float)((target.y - position.y) / mag);
+        float velocityX = 15 * (float) ((target.x - position.x) / mag);
+        float velocityY = 15 * (float) ((target.y - position.y) / mag);
 
-        float theta = (float)Math.atan(velocityY/ velocityX);
+        float theta = (float) Math.atan(velocityY / velocityX);
 
-        //Particle bullet = new Particle(this.bullet, false);
+        for(Particle p : bullets){
+            p.setPosition(position.x, position.y);
+            p.setFaction("good");
+            p.setColor(Color.WHITE);
+        }
 
-        bullet.setPosition(position.x, position.y);
-        bullet.rotate(theta * 180 / (float)Math.PI);
-        bullet.setFaction("good");
-        bullet.setColor(Color.WHITE);
-        bullet.setVelocity(new Vector2(velocityX, velocityY));
+        if(System.currentTimeMillis() - powerupInit > powerupLength){
+            shootType = "normal";
+        }
 
-        bullet.setAcceleration(new Vector2(0.0f, 0.0f));
+        if(shootType.equals("normal") || shootType.equals("barrier")) {
+            fireRate = 300;
+            for (Particle bullet : bullets) {
+                bullet.rotate(theta * 180 / (float) Math.PI);
+                bullet.setVelocity(new Vector2(velocityX, velocityY));
+                bullet.setAcceleration(new Vector2(0.0f, 0.0f));
+            }
+        }
+
+        else if(shootType.equals("nova")){
+            fireRate = 1000;
+            float randAngle = (float)(random.nextFloat() * 2 * Math.PI);
+
+            for(int i = 0; i < bullets.size(); i++){
+                theta = (float)(i*2*Math.PI/bullets.size()) + randAngle;
+
+                bullets.get(i).setColor(Color.YELLOW);
+                bullets.get(i).rotate((float)(180*theta/Math.PI));
+                bullets.get(i).setVelocity(new Vector2((float)(15*Math.cos(theta)), (float)(15*Math.sin(theta))));
+                bullets.get(i).setAcceleration(new Vector2(0.0f, 0.0f));
+            }
+        }
+
+        else if(shootType.equals("piercing")){
+            fireRate = 300;
+            for (Particle bullet : bullets) {
+                bullet.setColor(Color.BLUE);
+                bullet.rotate(theta * 180 / (float) Math.PI);
+                bullet.setVelocity(new Vector2(velocityX, velocityY));
+                bullet.setAcceleration(new Vector2(0.0f, 0.0f));
+            }
+        }
+
 
         shot = true;
+    }
+
+    public void applyPowerup(Powerup p){
+        powerups.add(p);
     }
 
     public boolean isDead(){
@@ -129,5 +182,27 @@ public class Dude {
 
     public boolean intersects(Circle circle){
         return hitbox.overlaps(circle);
+    }
+
+    public String getShootType(){
+        return shootType;
+    }
+
+    public void setShootType(String shootType){
+        powerupInit = System.currentTimeMillis();
+
+        if(shootType.equals("barrier")){
+            barrier = new Barrier(position, 75);
+        }
+
+        this.shootType = shootType;
+    }
+
+    public Barrier getBarrier(){
+        return barrier;
+    }
+
+    public long getFireRate(){
+        return fireRate;
     }
 }

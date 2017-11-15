@@ -1,10 +1,13 @@
-package com.ugen.piano;
+package com.ugen.piano.BadGuys;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.ugen.piano.Hexagon;
+import com.ugen.piano.Pools.HexBadGuyPool;
+import com.ugen.piano.Pools.SpinningBadGuyPool;
 
 /**
  * Created by Eugene Munblit on 10/17/2017.
@@ -42,8 +45,8 @@ public class HexagonBadGuy extends BadGuy {
         hex.drawFilled(renderer, Color.GOLD);
     }
 
-    public Array<SpinningBadGuyPool.PooledSpinningBadGuy> explode(SpinningBadGuyPool pool){
-        Array<SpinningBadGuyPool.PooledSpinningBadGuy> s = new Array<SpinningBadGuyPool.PooledSpinningBadGuy>();
+    public Array<SpinningBadGuy> explode(SpinningBadGuyPool pool){
+        Array<SpinningBadGuy> s = new Array<SpinningBadGuy>();
 
         for(int i = 0; i < 6; i++){
             s.add(pool.obtain());
@@ -55,7 +58,8 @@ public class HexagonBadGuy extends BadGuy {
         return s;
     }
 
-    public Circle getHitBox(){
+    @Override
+    public Circle getHitbox(){
         return hitbox;
     }
 

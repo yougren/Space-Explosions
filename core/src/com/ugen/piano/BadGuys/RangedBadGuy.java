@@ -1,14 +1,15 @@
-package com.ugen.piano;
+package com.ugen.piano.BadGuys;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.ParticleEmitter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.ugen.piano.Particle;
+import com.ugen.piano.Pools.RangedBadGuyPool;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Created by Eugene Munblit on 10/3/2017.
