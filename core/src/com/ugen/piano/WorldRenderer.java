@@ -39,7 +39,7 @@ import java.util.Random;
 public class WorldRenderer {
     private SpriteBatch batch;
     private ShapeRenderer renderer;
-    private long initTimeD, initTimeB, initHit, bounceTime;
+    private long initTimeD, initTimeB, initTimeP, initHit, bounceTime;
     private Random rand;
 
     private com.ugen.piano.Pools.BadGuyPool badGuyPool;
@@ -75,14 +75,14 @@ public class WorldRenderer {
     private Vector2 bouncePos;
     private int bounceCase;
 
-    private Powerup powerup;
+    private ArrayList<Powerup> powerups;
 
     private boolean spawn = true;
 
     public WorldRenderer(GameWorld world){
         this.world = world;
 
-        initTimeD = initTimeB = System.currentTimeMillis();
+        initTimeP = initTimeD = initTimeB = System.currentTimeMillis();
 
         rand = new Random();
 
@@ -102,7 +102,7 @@ public class WorldRenderer {
         spinningBadGuys = new Array<SpinningBadGuy>();
         hexBadGuyPool = new com.ugen.piano.Pools.HexBadGuyPool(hbg, 50, 100);
         hexBadGuys = new Array<HexagonBadGuy>();
-        particlePool = new com.ugen.piano.Pools.ParticlePool(p, 100, 1000);
+        particlePool = new com.ugen.piano.Pools.ParticlePool(p, 200, 1000);
         pooledParticles = new Array<com.ugen.piano.Pools.ParticlePool.PooledParticle>();
 
         batch = new SpriteBatch();
@@ -178,10 +178,7 @@ public class WorldRenderer {
             }
         }
 
-        powerup = new Powerup(new Vector2(hexagons.get(rand.nextInt(hexagons.size())).getX(),
-                hexagons.get(rand.nextInt(hexagons.size())).getY()), new Sprite(new Texture("powerup.png")),
-                rand.nextInt(3));
-        powerup.setColor(Color.GOLD);
+        powerups = new ArrayList<Powerup>();
     }
 
     public void render(float delta){
@@ -192,6 +189,10 @@ public class WorldRenderer {
         batch.setColor(new Color(0, 0, 1, 1));
         renderer.begin(ShapeRenderer.ShapeType.Filled);
         renderer.setProjectionMatrix(cam.combined);
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////RENDERING STUFF///////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+//        drawBackground();
 
         //if badguys are spawning...
         if(spawn) {
@@ -200,26 +201,32 @@ public class WorldRenderer {
 
                 float tempF = rand.nextFloat();
 
-                //randomly choose a type of badguy to spawn
+                /*
+                randomly choose a type of badguy to spawn
+                TODO: DYNAMIC IF STATEMENTS???
+                */
+
                 if (tempF < .25f) {
                     badGuys.add(badGuyPool.obtain());
-                    badGuys.get(badGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
-                            rand.nextFloat() * height + boundingBox.getY()));
+                    badGuys.get(badGuys.size - 1).setPosition(getRandomCellPos());
                 } else if (tempF > .25f && tempF < .50f) {
                     rangedBadGuys.add(rangedBadGuyPool.obtain());
-                    rangedBadGuys.get(rangedBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
-                            rand.nextFloat() * height + boundingBox.getY()));
+                    rangedBadGuys.get(rangedBadGuys.size - 1).setPosition(getRandomCellPos());
 
                 } else if (tempF > .50f && tempF < .75f) {
                     spinningBadGuys.add(sbgPool.obtain());
-                    spinningBadGuys.get(spinningBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
-                            rand.nextFloat() * height + boundingBox.getY()));
+                    spinningBadGuys.get(spinningBadGuys.size - 1).setPosition(getRandomCellPos());
                 } else {
                     hexBadGuys.add(hexBadGuyPool.obtain());
-                    hexBadGuys.get(hexBadGuys.size - 1).setPosition(new Vector2(rand.nextFloat() * width + boundingBox.getX(),
-                            rand.nextFloat() * height + boundingBox.getY()));
+                    hexBadGuys.get(hexBadGuys.size - 1).setPosition(getRandomCellPos());
                 }
             }
+        }
+
+        if(System.currentTimeMillis() - initTimeP > 2000){
+            initTimeP = System.currentTimeMillis();
+            powerups.add(new Powerup(getRandomCellPos(), new Sprite(new Texture("powerup.png")),
+                    rand.nextInt(4)));
         }
 
         //if dude is allowed to fire again...
@@ -290,28 +297,26 @@ public class WorldRenderer {
                         bouncePos.x - 150.0f + 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000), bouncePos.y);
             }
         }
-        powerup.draw(batch);
 
         //Gdx.app.log("DEBUG", "POWERUP: " + dude.getShootType());
 
         dude.draw(renderer, batch, false);
 
         //powerup detection
-        if(dude.intersects(powerup.getHitbox())){
-            dude.setShootType(powerup.getType());
-            powerup = new Powerup(new Vector2(hexagons.get(rand.nextInt(hexagons.size())).getX(),
-                    hexagons.get(rand.nextInt(hexagons.size())).getY()), new Sprite(new Texture("powerup.png")),
-                    rand.nextInt(3));
-            //powerup.setColor((Color) powerup.getColorMap().get(powerup.getType()));
-        }
 
-        else if(!powerup.isActive()){
-            powerup = new Powerup(new Vector2(hexagons.get(rand.nextInt(hexagons.size())).getX(),
-                    hexagons.get(rand.nextInt(hexagons.size())).getY()), new Sprite(new Texture("powerup.png")),
-                    rand.nextInt(3));
-            //powerup.setColor((Color) powerup.getColorMap().get(powerup.getType()));
-        }
+        for(int i = powerups.size()-1; i>=0; i--) {
+            Powerup p = powerups.get(i);
 
+            p.draw(batch);
+            if (dude.intersects(p.getHitbox())) {
+                if (!p.getType().equals("health"))
+                    dude.setShootType(p.getType());
+                else
+                    dude.setHealth(dude.getHealth() + 60);
+            }
+            if(dude.intersects(p.getHitbox()) || !p.isActive())
+                powerups.remove(p);
+        }
 
         x2 = dude.getPosition().x;
         y2 = dude.getPosition().y;
@@ -319,10 +324,10 @@ public class WorldRenderer {
         //scroll static parts of the screen to be relative to dude
         scroll(x2-x1, y2-y1);
 
+        /*if(dude.getHealth() < healthBlocks.size()*10){
 
-        if(dude.getHealth() < healthBlocks.size()*10){
             healthBlocks.remove(healthBlocks.size()-1);
-        }
+        }*/
 
         //iterate through and update particles
         for(int i = pooledParticles.size - 1; i >= 0; i--){
@@ -356,19 +361,24 @@ public class WorldRenderer {
         checkBadGuyCollisions();
 
         //draw drawables and end rendering loop
+        //TODO: MAKE THIS WORK
         font.setColor(Color.WHITE);
         font.draw(batch, "SCORE: " + score, 0,0);
         //font.getData().setScale(5.0f);
-        drawBackground();
 
+        drawBackground();
         renderer.end();
         batch.end();
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////END OF RENDERING STUFF///////////////////////////////
+        ////////////////////////////////////////////////////////////////////////////////////////////
 
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
 
         while(dude.isDead()){
-
+            //TODO: make something happen when dude dies
         }
 
         log();
@@ -386,6 +396,10 @@ public class WorldRenderer {
 
     }
 
+    public Vector2 getRandomCellPos(){
+        return new Vector2(hexagons.get(rand.nextInt(hexagons.size())).getX(),
+                hexagons.get(rand.nextInt(hexagons.size())).getY());
+    }
     private void drawBackground(){
         for(Hexagon hex : hexagons){
             hex.draw(renderer, new Color(0.3f, 0.2f, 0.7f, 0.7f));
@@ -403,6 +417,9 @@ public class WorldRenderer {
     private void drawHealthBar(float x, float y){
         for(Rectangle r : healthBlocks){
             r.setPosition(r.getX() + x, r.getY() + y);
+        }
+        for(int i = 0; i < dude.getHealth()/10; i++){
+            Rectangle r = healthBlocks.get(i);
             renderer.rect(r.getX(), r.getY(), r.getWidth(), r.getHeight());
         }
     }

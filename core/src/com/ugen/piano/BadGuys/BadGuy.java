@@ -3,9 +3,7 @@ package com.ugen.piano.BadGuys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.ugen.piano.Pools.BadGuyPool;
 
 /**
  * Created by WilsonCS30 on 3/23/2017.
@@ -28,15 +26,11 @@ public class BadGuy {
         this.acceleration = a;
         this.position = pos;
         size = new Vector2(100, 100);
-        hitbox = new Circle(position.x + size.x/2, position.y + size.y / 2, size.x/2);
+        hitbox = new Circle(position.x + size.x/2, position.y + size.y/2, size.x/1.5f);
     }
 
     public BadGuy(Vector2 pos){
-        this.velocity = new Vector2(0, 0);
-        this.acceleration = new Vector2(0, 0);
-        this.position = pos;
-        size = new Vector2(100, 100);
-        hitbox = new Circle(position.x + size.x/2, position.y + size.y/2, size.x/2);
+        Initialize(new Vector2(0, 0), new Vector2(0,0), pos);
     }
 
     public void update(Vector2 newTarget){

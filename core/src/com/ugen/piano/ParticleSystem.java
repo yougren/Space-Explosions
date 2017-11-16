@@ -80,7 +80,7 @@ public class ParticleSystem {
         for(int i = 0; i < maxParticles; i++) {
             this.particles.add(new Particle(sprite, true));
             active[i] = true;
-            particles.get(i).scale(4.0f);
+            particles.get(i).scale(2.0f);
             this.particles.get(i).setPosition(position.x, position.y);
             activeParticles++;
         }

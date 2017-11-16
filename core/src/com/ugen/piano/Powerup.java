@@ -24,7 +24,7 @@ public class Powerup extends Sprite {
         super(sprite);
         this.setPosition(position.x, position.y);
 
-        types = new String[]{"piercing", "barrier", "nova"};
+        types = new String[]{"piercing", "barrier", "nova", "health"};
         this.type = types[typeNum];
         this.initTime = System.currentTimeMillis();
 
@@ -32,6 +32,7 @@ public class Powerup extends Sprite {
         colorMap.put("piercing", Color.BLUE);
         colorMap.put("barrier", Color.WHITE);
         colorMap.put("nova", Color.GOLD);
+        colorMap.put("health", Color.GREEN);
     }
 
     @Override
@@ -67,7 +68,7 @@ public class Powerup extends Sprite {
     }
 
     public Circle getHitbox(){
-        return new Circle(this.getX(), this.getY(), 50);
+        return new Circle(this.getX() + 50, this.getY() + 50, 50);
     }
 
     public boolean isActive(){

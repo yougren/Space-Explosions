@@ -153,6 +153,9 @@ public class Dude {
 
     public void setHealth(int health){
         this.health = health;
+        if(this.health > 300){
+            this.health = 300;
+        }
     }
 
     public int getHealth(){return health;}
