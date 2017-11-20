@@ -1,18 +1,15 @@
 package com.ugen.piano;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -185,6 +182,10 @@ public class Dude {
 
     public boolean intersects(Circle circle){
         return hitbox.overlaps(circle);
+    }
+
+    public Circle getHitbox(){
+        return hitbox;
     }
 
     public String getShootType(){

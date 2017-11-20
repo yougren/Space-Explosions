@@ -105,9 +105,6 @@ public class WorldRenderer {
         particlePool = new com.ugen.piano.Pools.ParticlePool(p, 200, 1000);
         pooledParticles = new Array<com.ugen.piano.Pools.ParticlePool.PooledParticle>();
 
-        batch = new SpriteBatch();
-        renderer = new ShapeRenderer();
-        renderer.setAutoShapeType(true);
 
 
         cam = new OrthographicCamera(1.0f, (float) Gdx.graphics.getHeight() / (float)Gdx.graphics.getWidth());
@@ -118,6 +115,12 @@ public class WorldRenderer {
         width = cam.viewportWidth;
         height = cam.viewportHeight;
         boundingBox = new Rectangle(0, 0, width, height);
+
+        batch = new SpriteBatch();
+        batch.setProjectionMatrix(cam.combined);
+        renderer = new ShapeRenderer();
+        renderer.setAutoShapeType(true);
+        renderer.setProjectionMatrix(cam.combined);
 
         dude = new Dude(new Vector2(width/2, height/2));
 
@@ -181,20 +184,7 @@ public class WorldRenderer {
         powerups = new ArrayList<Powerup>();
     }
 
-    public void render(float delta){
-        Gdx.gl.glClearColor(0, 0, 0, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.begin();
-        batch.setColor(new Color(0, 0, 1, 1));
-        renderer.begin(ShapeRenderer.ShapeType.Filled);
-        renderer.setProjectionMatrix(cam.combined);
-        //////////////////////////////////////////////////////////////////////////////////////////////////////
-        ////////////////////////////////////////////RENDERING STUFF///////////////////////////////////////////
-        //////////////////////////////////////////////////////////////////////////////////////////////////////
-//        drawBackground();
-
-        //if badguys are spawning...
+    public void preRender(){
         if(spawn) {
             if (System.currentTimeMillis() - initTimeD > 1000) {
                 initTimeD = System.currentTimeMillis();
@@ -248,12 +238,8 @@ public class WorldRenderer {
             }
 
             dude.shoot(new Vector2(dude.getPosition().x + touchPadR.getKnobPercentX(), dude.getPosition().y + touchPadR.getKnobPercentY()),
-                   tempBullets);
+                    tempBullets);
         }
-
-        totalParticles = 0;
-
-        renderer.setColor(0.0f, 0.0f, 1.0f, 1.0f);
 
         x1 = dude.getPosition().x;
         y1 = dude.getPosition().y;
@@ -284,25 +270,26 @@ public class WorldRenderer {
             }
         }
 
-        //makes a bouncing after effect when out of bounds
-        if(System.currentTimeMillis() - bounceTime < 1000){
-            renderer.setColor(new Color(0.2f, 0.2f, 0.5f, 1.0f - (float) (System.currentTimeMillis() - bounceTime) / 1000));
 
-            if(bounceCase == 0) {
-                renderer.line(bouncePos.x, bouncePos.y + 150.0f - 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000),
-                        bouncePos.x, bouncePos.y - 150.0f + 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000));
-            }
-            else if(bounceCase == 1){
-                renderer.line(bouncePos.x + 150.0f - 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000), bouncePos.y,
-                        bouncePos.x - 150.0f + 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000), bouncePos.y);
-            }
-        }
+    }
 
-        //Gdx.app.log("DEBUG", "POWERUP: " + dude.getShootType());
+    public void render(float delta){
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        dude.draw(renderer, batch, false);
+        preRender();
 
-        //powerup detection
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////RENDERING STUFF///////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        stage.act(Gdx.graphics.getDeltaTime());
+        stage.draw();
+
+        batch.setProjectionMatrix(cam.combined);
+        batch.begin();
+
+        //batch.setColor(new Color(0, 0, 1, 1));
 
         for(int i = powerups.size()-1; i>=0; i--) {
             Powerup p = powerups.get(i);
@@ -317,17 +304,6 @@ public class WorldRenderer {
             if(dude.intersects(p.getHitbox()) || !p.isActive())
                 powerups.remove(p);
         }
-
-        x2 = dude.getPosition().x;
-        y2 = dude.getPosition().y;
-
-        //scroll static parts of the screen to be relative to dude
-        scroll(x2-x1, y2-y1);
-
-        /*if(dude.getHealth() < healthBlocks.size()*10){
-
-            healthBlocks.remove(healthBlocks.size()-1);
-        }*/
 
         //iterate through and update particles
         for(int i = pooledParticles.size - 1; i >= 0; i--){
@@ -356,26 +332,57 @@ public class WorldRenderer {
                 systems.removeIndex(i);
             }
         }
-
-        checkBulletCollisions();
-        checkBadGuyCollisions();
-
-        //draw drawables and end rendering loop
-        //TODO: MAKE THIS WORK
-        font.setColor(Color.WHITE);
-        font.draw(batch, "SCORE: " + score, 0,0);
-        //font.getData().setScale(5.0f);
-
-        drawBackground();
-        renderer.end();
         batch.end();
 
+        renderer.setProjectionMatrix(cam.combined);
+        renderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        if(System.currentTimeMillis() - bounceTime < 1000){
+            renderer.setColor(new Color(0.2f, 0.2f, 0.5f, 1.0f - (float) (System.currentTimeMillis() - bounceTime) / 1000));
+
+            if(bounceCase == 0) {
+                renderer.line(bouncePos.x, bouncePos.y + 150.0f - 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000),
+                        bouncePos.x, bouncePos.y - 150.0f + 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000));
+            }
+            else if(bounceCase == 1){
+                renderer.line(bouncePos.x + 150.0f - 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000), bouncePos.y,
+                        bouncePos.x - 150.0f + 150.0f * ((float) (System.currentTimeMillis() - bounceTime) / 1000), bouncePos.y);
+            }
+        }
+
+        dude.draw(renderer, batch, false);
+
+        x2 = dude.getPosition().x;
+        y2 = dude.getPosition().y;
+
+        //scroll static parts of the screen to be relative to dude
+        scroll(x2-x1, y2-y1);
+
+        drawBackground();
+        //checkBulletCollisions();
+        checkBadGuyCollisions();
+
+        for(int i = pooledParticles.size - 1; i >= 0; i--){
+            ParticlePool.PooledParticle p = pooledParticles.get(i);
+
+            if(p.intersects(dude.getHitbox()) && p.getFaction().equals("bad")){
+                p.free();
+                pooledParticles.removeIndex(i);
+                dude.setHealth(dude.getHealth() - 5);
+            }
+        }
+
+        //TODO: MAKE THIS WORK
+        /*font.setColor(Color.WHITE);
+        font.draw(batch, "SCORE: " + score, 0,0);
+        //font.getData().setScale(5.0f);*/
+
+
+        renderer.end();
         ////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////END OF RENDERING STUFF///////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        stage.act(Gdx.graphics.getDeltaTime());
-        stage.draw();
 
         while(dude.isDead()){
             //TODO: make something happen when dude dies
@@ -400,6 +407,7 @@ public class WorldRenderer {
         return new Vector2(hexagons.get(rand.nextInt(hexagons.size())).getX(),
                 hexagons.get(rand.nextInt(hexagons.size())).getY());
     }
+
     private void drawBackground(){
         for(Hexagon hex : hexagons){
             hex.draw(renderer, new Color(0.3f, 0.2f, 0.7f, 0.7f));
@@ -424,77 +432,56 @@ public class WorldRenderer {
         }
     }
 
-    private boolean killBadGuys(Array<? extends BadGuy> bgs, ParticlePool.PooledParticle p, int ii){
-        for(int i = bgs.size - 1; i >= 0; i--){
-            BadGuy b = bgs.get(i);
+    public boolean killBadGuy(BadGuy b){
+        boolean dead = false;
+        if(dude.getShootType().equals("barrier")){
+            for(int j = dude.getBarrier().getTriangles().size() - 1; j >= 0; j--){
+                Triangle t = dude.getBarrier().getTriangles().get(j);
 
-            if(p.intersects(b.getHitbox())) {
-                if(b.getClass() == HexagonBadGuy.class){
-                    Array<SpinningBadGuy> tempA = hexBadGuys.get(i).explode(sbgPool);
+                if(t.intersects(b.getHitbox())){
+                    dude.getBarrier().deactivate(j);
+                    dead = true;
+                }
+            }
+        }
+        else {
+            for (int j = pooledParticles.size - 1; j >= 0; j--) {
+                ParticlePool.PooledParticle p = pooledParticles.get(j);
 
-                    for (int jj = 0; jj < 6; jj++) {
-                        spinningBadGuys.add(tempA.get(jj));
+                if (p.intersects(b.getHitbox()) && p.getFaction().equals(("good"))) {
+                    if (!dude.getShootType().equals("piercing")) {
+                        p.free();
+                        pooledParticles.removeIndex(j);
                     }
 
-                    hexBadGuyPool.free((HexagonBadGuy) b);
-                } else if(b.getClass() == BadGuy.class){
-                    badGuyPool.free(b);
-                } else if(b.getClass() == RangedBadGuy.class){
-                    rangedBadGuyPool.free((RangedBadGuy)b);
-                } else if(b.getClass() == SpinningBadGuy.class){
-                    sbgPool.free((SpinningBadGuy)b);
+                    dead = true;
                 }
-
-                bgs.removeIndex(i);
-                //Gdx.app.log("DEBUG", "CLASS: " + b.getClass());
-
-                com.ugen.piano.Pools.ParticleSystemPool.PooledSystem temp = systemPool.obtain();
-                temp.setBoundary(boundingBox);
-                temp.setPosition(new Vector2(p.getX(), p.getY()));
-                systems.add(temp);
-
-                if (!dude.getShootType().equals("piercing")) {
-                    p.free();
-                    pooledParticles.removeIndex(ii);
-                    return true;
-                }
-
-                score += 420;
             }
         }
 
-        return false;
-    }
+        if(dead){
+            ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+            temp.setBoundary(boundingBox);
+            temp.setPosition(new Vector2(b.getX(), b.getY()));
+            systems.add(temp);
 
-    private boolean killBadGuys(Array<? extends BadGuy> bgs, Triangle t, int j){
-        for(int i = bgs.size - 1; i >= 0; i--){
-            BadGuy b = bgs.get(i);
-
-            if(t.intersects(b.getHitbox())){
-                dude.getBarrier().deactivate(j);
-                ParticleSystemPool.PooledSystem temp = systemPool.obtain();
-                temp.setBoundary(boundingBox);
-                temp.setPosition(new Vector2(b.getX(), b.getY()));
-                systems.add(temp);
-
-                if(b.getClass() == HexagonBadGuy.class){
-                    Array<SpinningBadGuy> tempA = hexBadGuys.get(i).explode(sbgPool);
-
-                    for (int jj = 0; jj < 6; jj++) {
-                        spinningBadGuys.add(tempA.get(jj));
-                    }
-                }
-                bgs.removeIndex(i);
-
-                return true;
-            }
+            score += 420;
+            return true;
         }
 
         return false;
     }
 
     private void checkBadGuyCollisions(){
-        for(com.ugen.piano.BadGuys.BadGuy b : badGuys){
+        for(int i = badGuys.size - 1; i >= 0; i--){
+            BadGuy b = badGuys.get(i);
+
+            if(killBadGuy(b)){
+               badGuyPool.free(b);
+               badGuys.removeIndex(i);
+               continue;
+            }
+
             b.update(new Vector2(dude.getPosition().x - b.getHitbox().radius, dude.getPosition().y - b.getHitbox().radius));
             b.draw(renderer);
             if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
@@ -506,7 +493,15 @@ public class WorldRenderer {
             }
         }
 
-        for(RangedBadGuy b : rangedBadGuys){
+        for(int i = rangedBadGuys.size - 1; i >= 0; i--){
+            RangedBadGuy b = rangedBadGuys.get(i);
+
+            if(killBadGuy(b)){
+                rangedBadGuyPool.free(b);
+                rangedBadGuys.removeIndex(i);
+                continue;
+            }
+
             b.update(new Vector2(dude.getPosition().x - b.getHitbox().radius,
                     dude.getPosition().y - b.getHitbox().radius), batch);
             b.draw(renderer);
@@ -527,82 +522,56 @@ public class WorldRenderer {
 
         for(int i = spinningBadGuys.size - 1; i >= 0; i--){
             SpinningBadGuy b = spinningBadGuys.get(i);
+
+            if(killBadGuy(b)){
+                sbgPool.free(b);
+                spinningBadGuys.removeIndex(i);
+                continue;
+            }
+
             b.update(new Vector2(dude.getPosition().x, dude.getPosition().y));
             b.draw(renderer);
+
             if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
                 if (dude.intersects(b.getHitbox())) {
                     Gdx.app.log("DEBUG", "OW");
                     dude.setHealth(dude.getHealth() - 20);
                     initHit = System.currentTimeMillis();
-                    spinningBadGuys.removeIndex(i);
-                    sbgPool.free(b);
-                    com.ugen.piano.Pools.ParticleSystemPool.PooledSystem temp = systemPool.obtain();
+                    ParticleSystemPool.PooledSystem temp = systemPool.obtain();
                     temp.setBoundary(boundingBox);
                     temp.setPosition(new Vector2(b.getX(), b.getY()));
                     systems.add(temp);
+
+                    sbgPool.free(b);
+                    spinningBadGuys.removeIndex(i);
                 }
             }
         }
 
-        for(HexagonBadGuy b : hexBadGuys){
+        for(int i = hexBadGuys.size - 1; i >= 0; i--){
+            HexagonBadGuy b = hexBadGuys.get(i);
+
+            if(killBadGuy(b)){
+                hexBadGuyPool.free(b);
+                hexBadGuys.removeIndex(i);
+                Array<SpinningBadGuy> temp = b.explode(sbgPool);
+
+                for(SpinningBadGuy s : temp){
+                    spinningBadGuys.add(s);
+                }
+
+                continue;
+            }
+
             b.update(new Vector2(dude.getPosition().x - b.getHitbox().radius, dude.getPosition().y - b.getHitbox().radius));
             b.draw(renderer);
+
             if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
                 if (dude.intersects(b.getHitbox())) {
                     Gdx.app.log("DEBUG", "OW");
                     dude.setHealth(dude.getHealth() - 5);
                     initHit = System.currentTimeMillis();
                 }
-            }
-        }
-
-    }
-
-    private void checkBulletCollisions(){
-
-        if(dude.getShootType().equals("barrier")) {
-            for (int j = dude.getBarrier().getTriangles().size() - 1; j >= 0; j--) {
-                Triangle tri = dude.getBarrier().getTriangles().get(j);
-
-                if (tri.isActive()) {
-                    if(killBadGuys(badGuys, tri, j)){
-                        continue;
-                    }
-                    if(killBadGuys(rangedBadGuys, tri, j)){
-                        continue;
-                    }
-                    if(killBadGuys(spinningBadGuys, tri, j)){
-                        continue;
-                    }
-
-                    killBadGuys(hexBadGuys, tri, j);
-                }
-            }
-        }
-
-        for(int ii = pooledParticles.size - 1; ii >= 0; ii--){
-            com.ugen.piano.Pools.ParticlePool.PooledParticle p = pooledParticles.get(ii);
-
-            if(p.getFaction().equals("bad")){
-                if(dude.intersects(p.getBoundingRectangle()))   {
-                    Gdx.app.log("DEBUG", "OW");
-                    dude.setHealth(dude.getHealth() - 5);
-                    p.free();
-                    pooledParticles.removeIndex(ii);
-                }
-            }
-
-            else if(p.getFaction().equals("good")){
-                if(killBadGuys(badGuys, p, ii)){
-                    continue;
-                }
-                if(killBadGuys(rangedBadGuys, p, ii)){
-                    continue;
-                }
-                if(killBadGuys(spinningBadGuys, p, ii)) {
-                    continue;
-                }
-                killBadGuys(hexBadGuys, p, ii);
             }
         }
     }

@@ -53,8 +53,8 @@ public class RangedBadGuy extends BadGuy {
         double mag = Math.sqrt((target.x - position.x)*(target.x - position.x)
                 + (target.y - position.y)*(target.y - position.y));
 
-        float velocityX = 5 * (float)((target.x - position.x) / mag);
-        float velocityY = 5 * (float)((target.y - position.y) / mag);
+        float velocityX = 15 * (float)((target.x - position.x) / mag);
+        float velocityY = 15 * (float)((target.y - position.y) / mag);
 
         float theta = (float)Math.atan(velocityY/ velocityX);
 

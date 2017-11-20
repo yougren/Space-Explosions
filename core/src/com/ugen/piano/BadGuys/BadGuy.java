@@ -26,7 +26,7 @@ public class BadGuy {
         this.acceleration = a;
         this.position = pos;
         size = new Vector2(100, 100);
-        hitbox = new Circle(position.x + size.x/2, position.y + size.y/2, size.x/1.5f);
+        hitbox = new Circle(position.x + size.x/2, position.y + size.y/2, size.x);
     }
 
     public BadGuy(Vector2 pos){
