@@ -1,6 +1,9 @@
 package com.ugen.piano.Pools;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.utils.Array;
 import com.ugen.piano.BadGuys.BadGuy;
 
@@ -14,6 +17,7 @@ public class BadGuyPool {
     private final Array<BadGuy> freeBadGuys;
 
     public BadGuyPool(com.ugen.piano.BadGuys.BadGuy bg, int initialCapacity, int max){
+
         freeBadGuys = new Array<BadGuy>(false, initialCapacity);
 
         for(int i = 0; i < initialCapacity; i++)

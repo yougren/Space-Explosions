@@ -1,6 +1,8 @@
 package com.ugen.piano.BadGuys;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Rectangle;
@@ -12,14 +14,12 @@ import com.ugen.piano.Pools.SpinningBadGuyPool;
  */
 
 public class SpinningBadGuy extends BadGuy {
-
     private double theta, omega, alpha;
     private float velMag, length;
-    private float[] vertices;
     private Circle hitBox;
 
     public SpinningBadGuy(BadGuy bg){
-        super(bg);
+        super(bg, new Sprite(new Texture("spinningbadguy.png")));
         init();
     }
 
@@ -33,39 +33,23 @@ public class SpinningBadGuy extends BadGuy {
         omega = Math.PI/360;
         alpha = Math.PI/2160;
         velMag = 5;
-        vertices = new float[6];
-        length = 50;
-        hitBox = new Circle(position.x, position.y, length);
+        length = 100;
+        hitBox = new Circle(getX() + getWidth()/2, getY() + getHeight()/2, getWidth()/2);
     }
 
     @Override
     public void update(Vector2 newTarget){
-        double mag = Math.sqrt((newTarget.x - position.x)*(newTarget.x - position.x) + (newTarget.y - position.y)*(newTarget.y - position.y));
-        velocity.x = velMag * (float)((newTarget.x - position.x) / mag);
-        velocity.y = velMag * (float)((newTarget.y - position.y) / mag);
+        double mag = Math.sqrt((newTarget.x - getX())*(newTarget.x - getX()) + (newTarget.y - getY())*(newTarget.y - getY()));
+        velocity.x = velMag * (float)((newTarget.x - getX()) / mag);
+        velocity.y = velMag * (float)((newTarget.y - getY()) / mag);
 
         velMag += .05;
         omega += alpha;
         theta += omega;
 
-        hitBox.setPosition(position);
-        position.add(velocity);
-    }
-
-    @Override
-    public void draw(ShapeRenderer renderer){
-        for(int i = 0; i < 6; i+=2){
-            vertices[i] = (float)Math.cos(i*Math.PI/3 + theta)*length + position.x;
-            vertices[i+1] = (float)Math.sin(i*Math.PI/3 + theta)*length + position.y;
-        }
-
-        renderer.setColor(Color.YELLOW);
-        renderer.triangle(vertices[0], vertices[1], vertices[2],
-                vertices[3], vertices[4], vertices[5]);
-    }
-
-    public void rotate(float theta){
-        this.theta = theta;
+        rotate((float) (omega * 180 / Math.PI));
+        translate(velocity.x, velocity.y);
+        hitBox.setPosition(new Vector2(getX(), getY()));
     }
 
     @Override
@@ -73,8 +57,8 @@ public class SpinningBadGuy extends BadGuy {
         omega = Math.PI/360;
         theta = 0;
         velMag = 5;
+        setRotation(0);
     }
-
 
     @Override
     public Circle getHitbox(){

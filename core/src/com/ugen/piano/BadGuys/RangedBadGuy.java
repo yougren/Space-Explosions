@@ -23,12 +23,13 @@ public class RangedBadGuy extends BadGuy {
     private long lastShot;
 
     public RangedBadGuy(RangedBadGuy rbg){
-        super(rbg);
+        super(rbg, new Sprite(new Texture("rangedbadguy.png")));
         initialize();
     }
 
     public RangedBadGuy(Vector2 pos){
         super(pos);
+        setPosition(getX(), getY());
         initialize();
     }
 
@@ -39,27 +40,21 @@ public class RangedBadGuy extends BadGuy {
         bullets = new ArrayList<Particle>();
     }
 
-    @Override
-    public void draw(ShapeRenderer renderer){
-        renderer.setColor(Color.PURPLE);
-        renderer.rect(position.x, position.y, size.x, size.y);
-    }
-
     public void update(Vector2 newTarget, SpriteBatch batch){
 
     }
 
     public void shoot(Vector2 target, Particle bullet){
-        double mag = Math.sqrt((target.x - position.x)*(target.x - position.x)
-                + (target.y - position.y)*(target.y - position.y));
+        double mag = Math.sqrt((target.x - getX())*(target.x - getX())
+                + (target.y - getY())*(target.y - getY()));
 
-        float velocityX = 15 * (float)((target.x - position.x) / mag);
-        float velocityY = 15 * (float)((target.y - position.y) / mag);
+        float velocityX = 15 * (float)((target.x - getX()) / mag);
+        float velocityY = 15 * (float)((target.y - getY()) / mag);
 
         float theta = (float)Math.atan(velocityY/ velocityX);
 
 
-        bullet.setPosition(position.x, position.y);
+        bullet.setPosition(getX(), getY());
         bullet.rotate(theta * 180 / (float)Math.PI);
         bullet.setFaction("bad");
         bullet.setColor(Color.RED);

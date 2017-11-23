@@ -195,20 +195,21 @@ public class WorldRenderer {
                 randomly choose a type of badguy to spawn
                 TODO: DYNAMIC IF STATEMENTS???
                 */
+                Vector2 randCellPos = getRandomCellPos();
 
                 if (tempF < .25f) {
                     badGuys.add(badGuyPool.obtain());
-                    badGuys.get(badGuys.size - 1).setPosition(getRandomCellPos());
+                    badGuys.get(badGuys.size - 1).setPosition(randCellPos.x, randCellPos.y);
                 } else if (tempF > .25f && tempF < .50f) {
                     rangedBadGuys.add(rangedBadGuyPool.obtain());
-                    rangedBadGuys.get(rangedBadGuys.size - 1).setPosition(getRandomCellPos());
+                    rangedBadGuys.get(rangedBadGuys.size - 1).setPosition(randCellPos.x, randCellPos.y);
 
                 } else if (tempF > .50f && tempF < .75f) {
                     spinningBadGuys.add(sbgPool.obtain());
-                    spinningBadGuys.get(spinningBadGuys.size - 1).setPosition(getRandomCellPos());
+                    spinningBadGuys.get(spinningBadGuys.size - 1).setPosition(randCellPos.x, randCellPos.y);
                 } else {
                     hexBadGuys.add(hexBadGuyPool.obtain());
-                    hexBadGuys.get(hexBadGuys.size - 1).setPosition(getRandomCellPos());
+                    hexBadGuys.get(hexBadGuys.size - 1).setPosition(randCellPos.x, randCellPos.y);
                 }
             }
         }
@@ -319,6 +320,7 @@ public class WorldRenderer {
             }
         }
 
+        totalParticles = 0;
         //iterate through and update particle systems
         for(int i = systems.size - 1; i >= 0; i--){
             com.ugen.piano.Pools.ParticleSystemPool.PooledSystem system = systems.get(i);
@@ -332,6 +334,9 @@ public class WorldRenderer {
                 systems.removeIndex(i);
             }
         }
+
+        checkBadGuyCollisions();
+
         batch.end();
 
         renderer.setProjectionMatrix(cam.combined);
@@ -360,7 +365,6 @@ public class WorldRenderer {
 
         drawBackground();
         //checkBulletCollisions();
-        checkBadGuyCollisions();
 
         for(int i = pooledParticles.size - 1; i >= 0; i--){
             ParticlePool.PooledParticle p = pooledParticles.get(i);
@@ -482,15 +486,7 @@ public class WorldRenderer {
                continue;
             }
 
-            b.update(new Vector2(dude.getPosition().x - b.getHitbox().radius, dude.getPosition().y - b.getHitbox().radius));
-            b.draw(renderer);
-            if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
-                if (dude.intersects(b.getHitbox())) {
-                    Gdx.app.log("DEBUG", "OW");
-                    dude.setHealth(dude.getHealth() - 5);
-                    initHit = System.currentTimeMillis();
-                }
-            }
+            updateBadGuy(b);
         }
 
         for(int i = rangedBadGuys.size - 1; i >= 0; i--){
@@ -502,22 +498,12 @@ public class WorldRenderer {
                 continue;
             }
 
-            b.update(new Vector2(dude.getPosition().x - b.getHitbox().radius,
-                    dude.getPosition().y - b.getHitbox().radius), batch);
-            b.draw(renderer);
-
             if(System.currentTimeMillis() - b.getLastShot() > 1000/b.getFireRate()){
                 pooledParticles.add(particlePool.obtain());
                 b.shoot(dude.getPosition(), pooledParticles.get(pooledParticles.size - 1));
             }
 
-            if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
-                if (dude.intersects(b.getHitbox())) {
-                    Gdx.app.log("DEBUG", "OW");
-                    dude.setHealth(dude.getHealth() - 5);
-                    initHit = System.currentTimeMillis();
-                }
-            }
+            updateBadGuy(b);
         }
 
         for(int i = spinningBadGuys.size - 1; i >= 0; i--){
@@ -530,7 +516,7 @@ public class WorldRenderer {
             }
 
             b.update(new Vector2(dude.getPosition().x, dude.getPosition().y));
-            b.draw(renderer);
+            b.draw(batch);
 
             if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
                 if (dude.intersects(b.getHitbox())) {
@@ -563,15 +549,19 @@ public class WorldRenderer {
                 continue;
             }
 
-            b.update(new Vector2(dude.getPosition().x - b.getHitbox().radius, dude.getPosition().y - b.getHitbox().radius));
-            b.draw(renderer);
+            updateBadGuy(b);
+        }
+    }
 
-            if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
-                if (dude.intersects(b.getHitbox())) {
-                    Gdx.app.log("DEBUG", "OW");
-                    dude.setHealth(dude.getHealth() - 5);
-                    initHit = System.currentTimeMillis();
-                }
+    public void updateBadGuy(BadGuy b){
+        b.update(new Vector2(dude.getPosition().x - b.getHitbox().radius, dude.getPosition().y - b.getHitbox().radius));
+        b.draw(batch);
+
+        if(System.currentTimeMillis() - initHit > dude.getDamageTimer()) {
+            if (dude.intersects(b.getHitbox())) {
+                Gdx.app.log("DEBUG", "OW");
+                dude.setHealth(dude.getHealth() - 5);
+                initHit = System.currentTimeMillis();
             }
         }
     }
